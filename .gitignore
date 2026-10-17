@@ -1,0 +1,9 @@
+bin/
+obj/
+.vs/
+*.user
+publicar/
+*.zip
+
+# Los secretos reales no se suben nunca: solo la plantilla.
+azure/deploy.secrets.ps1
