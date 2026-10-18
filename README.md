@@ -17,7 +17,7 @@ Cada rama añade un paso a la anterior. Para ver una, `git checkout <rama>`; par
 | 5 | `modulo-5/costes` | El presupuesto del grupo, con avisos al responsable |
 | 6 | `modulo-6/un-comando` | La tienda entera desde cero con una orden, y la lista de comprobación del pilar |
 
-Lo que hace cada rama, cómo se lanza, qué mirar en el Portal y cómo se comprueba está en `docs/`, un fichero por módulo. La lista de comprobación, en `docs/lista-comprobacion.md`.
+Lo que hace cada rama, cómo se lanza, qué mirar en el Portal y cómo se comprueba está en `docs/`, un fichero por módulo. La lista de comprobación, en `docs/lista-comprobacion.md`. Y la secuencia de scripts para dar el curso, clase a clase, en `docs/guia-del-profesor.md`.
 
 ## Qué hay dentro
 
