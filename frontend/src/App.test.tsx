@@ -2,7 +2,12 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App.tsx'
 
-const productos = [{ id: 1, nombre: 'Camiseta', descripcion: 'De algodón.', existencias: 2 }]
+const productos = [{ id: 1, nombre: 'Camiseta', descripcion: 'De algodón.', existencias: 2, foto: 'camiseta.jpg' }]
+
+const salud = [
+  { nombre: 'Base de datos', correcta: true, detalle: 'Catálogo leído de la base: 6 productos.' },
+  { nombre: 'Almacenamiento', correcta: false, detalle: 'Sin configurar: falta ConnectionStrings__Fotos.' },
+]
 
 // Una respuesta de fetch con lo justo que usa api.ts.
 function respuesta(cuerpo: unknown, status = 200) {
@@ -22,6 +27,7 @@ describe('App', () => {
       'fetch',
       vi.fn((url: string, init?: RequestInit) => {
         if (url === '/api/productos') return respuesta(productos)
+        if (url === '/salud') return respuesta(salud, 503)
         if (url === '/api/pedidos' && init?.method === 'POST') {
           const pedido = { id: 1, producto: 'Camiseta', cantidad: 1, fecha: '2026-10-19T09:30:00Z' }
           pedidos = [pedido]
@@ -38,11 +44,12 @@ describe('App', () => {
     vi.unstubAllGlobals()
   })
 
-  it('enseña el catálogo que devuelve la API', async () => {
+  it('enseña el catálogo que devuelve la API, con la foto de cada producto', async () => {
     render(<App />)
 
     expect(await screen.findByText('Camiseta')).toBeInTheDocument()
     expect(screen.getByText('2 en existencias')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Camiseta' })).toHaveAttribute('src', '/api/productos/1/foto')
   })
 
   it('al pedir, manda el pedido a la API y lo enseña', async () => {
@@ -52,6 +59,15 @@ describe('App', () => {
 
     expect(await screen.findByText('Pedido 1: 1 × Camiseta.')).toBeInTheDocument()
     expect(fetch).toHaveBeenCalledWith('/api/pedidos', expect.objectContaining({ method: 'POST' }))
+  })
+
+  it('enseña el estado de cada pieza aunque /salud responda 503', async () => {
+    render(<App />)
+
+    expect(await screen.findByText('Estado de la tienda')).toBeInTheDocument()
+    expect(screen.getByText('Correcto')).toBeInTheDocument()
+    expect(screen.getByText('Falla')).toBeInTheDocument()
+    expect(screen.getByText('Sin configurar: falta ConnectionStrings__Fotos.')).toBeInTheDocument()
   })
 
   it('si la API falla, lo dice en la página', async () => {

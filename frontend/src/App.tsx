@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import { listarProductos, pedir, ultimosPedidos } from './api.ts'
-import type { PedidoVista, Producto } from './tipos.ts'
+import { leerEstado, listarProductos, pedir, ultimosPedidos } from './api.ts'
+import Estado from './Estado.tsx'
+import type { PedidoVista, Producto, ResultadoComprobacion } from './tipos.ts'
 import './App.css'
 
 const mensajeDe = (e: unknown) => (e instanceof Error ? e.message : 'Algo ha fallado.')
@@ -8,6 +9,7 @@ const mensajeDe = (e: unknown) => (e instanceof Error ? e.message : 'Algo ha fal
 export default function App() {
   const [productos, setProductos] = useState<Producto[]>([])
   const [pedidos, setPedidos] = useState<PedidoVista[]>([])
+  const [estado, setEstado] = useState<ResultadoComprobacion[]>([])
   const [aviso, setAviso] = useState<string | null>(null)
 
   const cargar = useCallback(async () => {
@@ -22,6 +24,9 @@ export default function App() {
 
   useEffect(() => {
     void cargar()
+    leerEstado()
+      .then(setEstado)
+      .catch(() => setEstado([]))
   }, [cargar])
 
   async function alPedir(producto: Producto) {
@@ -51,6 +56,7 @@ export default function App() {
       <section className="catalogo" aria-label="Catálogo">
         {productos.map((p) => (
           <article key={p.id} className="producto">
+            {p.foto && <img src={`/api/productos/${p.id}/foto`} alt={p.nombre} />}
             <h2>{p.nombre}</h2>
             <p>{p.descripcion}</p>
             <p className="existencias">{p.existencias} en existencias</p>
@@ -75,6 +81,8 @@ export default function App() {
           </ul>
         )}
       </section>
+
+      <Estado filas={estado} />
     </main>
   )
 }

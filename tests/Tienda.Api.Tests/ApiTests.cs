@@ -56,6 +56,44 @@ public class ApiTests
     }
 
     [Fact]
+    public async Task Get_foto_de_un_producto_devuelve_su_jpg()
+    {
+        await using var fabrica = new WebApplicationFactory<Program>();
+        var cliente = fabrica.CreateClient();
+
+        var respuesta = await cliente.GetAsync("/api/productos/1/foto");
+
+        Assert.Equal(HttpStatusCode.OK, respuesta.StatusCode);
+        Assert.Equal("image/jpeg", respuesta.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task Get_foto_de_un_producto_que_no_existe_devuelve_404()
+    {
+        await using var fabrica = new WebApplicationFactory<Program>();
+        var cliente = fabrica.CreateClient();
+
+        var respuesta = await cliente.GetAsync("/api/productos/999/foto");
+
+        Assert.Equal(HttpStatusCode.NotFound, respuesta.StatusCode);
+    }
+
+    [Fact]
+    public async Task Salud_sin_Azure_configurado_devuelve_503_con_una_fila_por_pieza()
+    {
+        await using var fabrica = new WebApplicationFactory<Program>();
+        var cliente = fabrica.CreateClient();
+
+        var respuesta = await cliente.GetAsync("/salud");
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, respuesta.StatusCode);
+        var filas = await respuesta.Content.ReadFromJsonAsync<List<ResultadoComprobacion>>();
+        Assert.NotNull(filas);
+        Assert.Equal(["Base de datos", "Almacenamiento"], filas.Select(f => f.Nombre));
+        Assert.All(filas, f => Assert.False(f.Correcta));
+    }
+
+    [Fact]
     public async Task Post_pedido_de_un_producto_que_no_existe_devuelve_404()
     {
         await using var fabrica = new WebApplicationFactory<Program>();

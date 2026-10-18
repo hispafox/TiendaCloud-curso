@@ -7,6 +7,9 @@ public sealed class Producto
     public required string Nombre { get; set; }
     public required string Descripcion { get; set; }
     public int Existencias { get; set; }
+
+    // El nombre de su foto en el almacenamiento de objetos (modulo 3).
+    public string? Foto { get; set; }
 }
 
 // Un pedido guardado.
@@ -87,5 +90,5 @@ public sealed class CatalogoEnMemoria : ICatalogo
     }
 
     private static Producto Copiar(Producto p) =>
-        new() { Id = p.Id, Nombre = p.Nombre, Descripcion = p.Descripcion, Existencias = p.Existencias };
+        new() { Id = p.Id, Nombre = p.Nombre, Descripcion = p.Descripcion, Existencias = p.Existencias, Foto = p.Foto };
 }

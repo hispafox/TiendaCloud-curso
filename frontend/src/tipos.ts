@@ -5,6 +5,7 @@ export interface Producto {
   nombre: string
   descripcion: string
   existencias: number
+  foto: string | null
 }
 
 export interface PedidoVista {
@@ -12,4 +13,11 @@ export interface PedidoVista {
   producto: string
   cantidad: number
   fecha: string
+}
+
+// Una fila de /salud: una pieza de la tienda y si responde.
+export interface ResultadoComprobacion {
+  nombre: string
+  correcta: boolean
+  detalle: string
 }
