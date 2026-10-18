@@ -45,11 +45,20 @@ public class ComprobacionesTests
     }
 
     [Fact]
-    public async Task Almacenamiento_sin_cadena_falla_sin_lanzar()
+    public async Task Almacenamiento_sin_configurar_falla_sin_lanzar()
     {
-        var resultado = await new ComprobacionAlmacenamiento(null, "fotos").EjecutarAsync(CancellationToken.None);
+        var resultado = await new ComprobacionAlmacenamiento(new OpcionesTienda()).EjecutarAsync(CancellationToken.None);
 
         Assert.False(resultado.Correcta);
-        Assert.Contains("ConnectionStrings__Fotos", resultado.Detalle);
+        Assert.Contains("Tienda__BlobUri", resultado.Detalle);
+    }
+
+    [Fact]
+    public async Task KeyVault_sin_configurar_falla_sin_lanzar()
+    {
+        var resultado = await new ComprobacionKeyVault(new OpcionesTienda()).EjecutarAsync(CancellationToken.None);
+
+        Assert.False(resultado.Correcta);
+        Assert.Contains("Tienda__KeyVaultUri", resultado.Detalle);
     }
 }

@@ -6,6 +6,8 @@
 //   modulo 2  plan de App Service y la web .NET, que sirve la API y el front
 //   modulo 3  base de datos SQL para el catalogo y los pedidos, y almacenamiento
 //             para las fotos, con su ciclo de vida
+//   modulo 4  identidad de la web y Key Vault con un unico secreto (un mensaje);
+//             la web entra al almacenamiento y al Key Vault sin clave
 //
 // Lo despliega azure/desplegar.ps1. Lo borra azure/borrar.ps1.
 // =============================================================================
@@ -26,6 +28,9 @@ param sqlAdminLogin string = 'tiendaadmin'
 @description('Contrasena del administrador de SQL. Sale de deploy.secrets.ps1.')
 param sqlAdminPassword string
 
+@description('El mensaje que se guarda en el Key Vault y que la web ensena.')
+param mensaje string = 'Hola desde el Key Vault de la tienda'
+
 // ----- Nombres -----
 var sufijo = uniqueString(resourceGroup().id)
 var planName = 'plan-tienda-${entorno}'
@@ -34,6 +39,11 @@ var storageName = 'sttienda${take(sufijo, 13)}'
 var contenedorFotos = 'fotos'
 var sqlServerName = 'sql-tienda-${sufijo}'
 var sqlDbName = 'pedidos'
+var keyVaultName = 'kv-tienda-${take(sufijo, 13)}'
+
+// ----- Roles (identificadores fijos de Azure) -----
+var storageBlobDataContributorRoleId = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+var keyVaultSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6'
 
 // ----- Modulo 1: las etiquetas, en todos los recursos -----
 var etiquetas = {
@@ -134,6 +144,31 @@ resource cicloDeVida 'Microsoft.Storage/storageAccounts/managementPolicies@2023-
   }
 }
 
+// ----- Modulo 4: el Key Vault, con un unico secreto inofensivo -----
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
+  name: keyVaultName
+  location: location
+  tags: etiquetas
+  properties: {
+    tenantId: subscription().tenantId
+    sku: {
+      family: 'A'
+      name: 'standard'
+    }
+    enableRbacAuthorization: true
+    enableSoftDelete: true
+    softDeleteRetentionInDays: 7
+  }
+}
+
+resource secretoMensaje 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'mensaje'
+  properties: {
+    value: mensaje
+  }
+}
+
 // ----- Modulo 2: el plan y la web -----
 resource plan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: planName
@@ -153,6 +188,9 @@ resource app 'Microsoft.Web/sites@2023-12-01' = {
   location: location
   tags: etiquetas
   kind: 'app,linux'
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     serverFarmId: plan.id
     httpsOnly: true
@@ -161,20 +199,44 @@ resource app 'Microsoft.Web/sites@2023-12-01' = {
       minTlsVersion: '1.2'
       appSettings: [
         { name: 'WEBSITE_RUN_FROM_PACKAGE', value: '1' }
+        { name: 'Tienda__KeyVaultUri', value: keyVault.properties.vaultUri }
+        { name: 'Tienda__BlobUri', value: storageAccount.properties.primaryEndpoints.blob }
         { name: 'Tienda__Contenedor', value: contenedorFotos }
-        // Modulo 3: la web entra a la base con usuario y contrasena, y al
-        // almacenamiento con la clave de la cuenta. El modulo 4 quita la clave.
+        // La base sigue con usuario y contrasena: darle acceso a la identidad pide
+        // una orden dentro de la base que el Bicep no puede declarar (modulo 6).
         { name: 'ConnectionStrings__Pedidos', value: 'Server=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Database=${sqlDbName};User ID=${sqlAdminLogin};Password=${sqlAdminPassword};Encrypt=true;TrustServerCertificate=false;' }
-        { name: 'ConnectionStrings__Fotos', value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}' }
       ]
     }
   }
   dependsOn: [
     sqlDatabase
     fotos
+    secretoMensaje
   ]
+}
+
+// ----- Modulo 4: la web entra con su identidad, sin clave -----
+resource storageRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storageAccount.id, app.id, storageBlobDataContributorRoleId)
+  scope: storageAccount
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', storageBlobDataContributorRoleId)
+    principalId: app.identity.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource keyVaultRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(keyVault.id, app.id, keyVaultSecretsUserRoleId)
+  scope: keyVault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultSecretsUserRoleId)
+    principalId: app.identity.principalId
+    principalType: 'ServicePrincipal'
+  }
 }
 
 output appName string = app.name
 output appUrl string = 'https://${app.properties.defaultHostName}'
+output keyVaultName string = keyVault.name
 output storageAccountName string = storageAccount.name

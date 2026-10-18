@@ -35,7 +35,8 @@ public sealed class AlmacenFotosLocal : IAlmacenFotos
 }
 
 // Modulo 3: las fotos en Blob Storage, en el contenedor privado «fotos». La web
-// las sirve ella misma, porque el contenedor no se abre a Internet.
+// las sirve ella misma, porque el contenedor no se abre a Internet. Desde el
+// modulo 4 entra con su identidad, sin clave.
 public sealed class AlmacenFotosBlob(BlobContainerClient contenedor) : IAlmacenFotos
 {
     private readonly SemaphoreSlim cerrojo = new(1, 1);
