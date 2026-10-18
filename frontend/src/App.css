@@ -37,8 +37,14 @@ header p {
   background: #fff;
 }
 
+.producto img {
+  display: block;
+  width: 100%;
+  border-radius: 6px;
+}
+
 .producto h2 {
-  margin-top: 0;
+  margin-top: 12px;
 }
 
 .existencias {
@@ -60,6 +66,26 @@ button:disabled {
   cursor: not-allowed;
 }
 
-.pedidos {
+.pedidos,
+.estado {
   margin-top: 32px;
+}
+
+.estado table {
+  border-collapse: collapse;
+  width: 100%;
+  background: #fff;
+}
+
+.estado td {
+  padding: 8px;
+  border-bottom: 1px solid #d0d7de;
+}
+
+.ok {
+  color: #137333;
+}
+
+.mal {
+  color: #b3261e;
 }

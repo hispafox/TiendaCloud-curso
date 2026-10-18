@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Mochila">
+  <rect width="400" height="300" fill="#dafbe1"/>
+  <path d="M165 85 v-25 a35 35 0 0 1 70 0 v25" fill="none" stroke="#1a7f37" stroke-width="14"/>
+  <rect x="130" y="80" width="140" height="185" rx="36" fill="#1a7f37"/>
+  <rect x="155" y="165" width="90" height="70" rx="12" fill="#2da44e"/>
+  <rect x="185" y="185" width="30" height="8" rx="4" fill="#dafbe1"/>
+</svg>

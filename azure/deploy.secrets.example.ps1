@@ -16,3 +16,7 @@ $GrupoRecursos = "rg-tienda-pruebas"
 
 # Quien responde de los recursos: va en la etiqueta «responsable» (modulo 5).
 $Responsable = "tu.nombre@tuempresa.com"
+
+# Contrasena del administrador de SQL (modulo 3): 8 caracteres o mas, con
+# mayuscula, minuscula, numero y simbolo.
+$SqlPassword = "CambiaEsto-2026!"

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Botella">
+  <rect width="400" height="300" fill="#eaeef2"/>
+  <rect x="180" y="40" width="40" height="30" rx="6" fill="#24292f"/>
+  <path d="M185 70 h30 l20 40 v130 a16 16 0 0 1 -16 16 h-38 a16 16 0 0 1 -16 -16 v-130 Z" fill="#57606a"/>
+  <rect x="165" y="150" width="70" height="50" fill="#8c959f"/>
+</svg>
