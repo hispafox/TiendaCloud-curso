@@ -2,7 +2,7 @@
 
 La tienda online del curso de arquitectura cloud, montada en **Azure** paso a paso. Cada módulo del curso sube una parte más de la tienda, y cada parte tiene su rama en este repositorio.
 
-> **Estás en `modulo-5/costes`.** La tienda tiene su presupuesto: un importe mensual para el grupo, con avisos al responsable cuando el gasto previsto pasa del 50, el 90 y el 100 %.
+> **Estás en la tienda terminada.** `main` y `modulo-6/un-comando` tienen lo mismo: la tienda entera, que se monta desde cero con una orden y se borra con otra.
 
 ## Las ramas del curso
 
@@ -17,20 +17,20 @@ Cada rama añade un paso a la anterior. Para ver una, `git checkout <rama>`; par
 | 5 | `modulo-5/costes` | El presupuesto del grupo, con avisos al responsable |
 | 6 | `modulo-6/un-comando` | La tienda entera desde cero con una orden, y la lista de comprobación del pilar |
 
-`main` es la tienda terminada, igual que la rama del módulo 6. Lo que hace cada rama, cómo se lanza y cómo se comprueba está en `docs/`, un fichero por módulo.
+Lo que hace cada rama, cómo se lanza, qué mirar en el Portal y cómo se comprueba está en `docs/`, un fichero por módulo. La lista de comprobación, en `docs/lista-comprobacion.md`.
 
-## Qué hay en esta rama
+## Qué hay dentro
 
 | Carpeta | Qué es |
 |---|---|
-| `azure/main.bicep` | La infraestructura: plan y web de App Service con su identidad, base de datos SQL, almacenamiento con su contenedor de fotos y su ciclo de vida, Key Vault con un mensaje, los dos permisos de la identidad, el presupuesto del grupo y etiquetas en todo |
-| `azure/desplegar.ps1` | Crea el grupo, despliega el Bicep, compila el front, publica la API con el front dentro y espera a que `/salud` responda |
-| `azure/borrar.ps1` | Borra el presupuesto, el grupo de recursos entero, y purga el Key Vault |
+| `azure/main.bicep` | La infraestructura entera: plan y web de App Service con su identidad, base de datos SQL, almacenamiento con su contenedor de fotos y su ciclo de vida, Key Vault con un mensaje, los dos permisos de la identidad, el presupuesto del grupo y etiquetas en todo |
+| `azure/desplegar.ps1` | Monta la tienda: crea el grupo, despliega el Bicep, compila el front, publica la API con el front dentro y espera a que `/salud` responda |
+| `azure/borrar.ps1` | Borra el presupuesto y el grupo de recursos entero, y purga el Key Vault, para que no siga costando dinero |
 | `azure/deploy.secrets.example.ps1` | La plantilla de valores: suscripción, región, grupo, responsable, contraseña de la base e importe del presupuesto |
 | `src/Tienda.Api` | La API .NET 10: catálogo, pedidos, fotos, el mensaje del Key Vault y `/salud`. En Azure sirve también el front |
 | `frontend` | El front: React, Vite y TypeScript |
 | `tests/Tienda.Api.Tests` | Los tests de la API (xUnit) |
-| `docs/` | Un fichero por módulo: qué hace cada rama y cómo se comprueba |
+| `docs/` | Un fichero por módulo y la lista de comprobación |
 
 ## Lo que necesitas
 
@@ -38,6 +38,8 @@ Cada rama añade un paso a la anterior. Para ver una, `git checkout <rama>`; par
 - El SDK de .NET 10 (`dotnet --version`).
 - Node.js con npm (`node --version`).
 - Permisos para crear recursos y asignar roles en una suscripción de pruebas (el rol Owner los da los dos).
+
+No hacen falta contenedores ni ninguna otra herramienta.
 
 ## Montarla
 
@@ -49,6 +51,12 @@ pwsh -ExecutionPolicy Bypass -File .\azure\desplegar.ps1
 ```
 
 Al terminar escribe la URL de la tienda. `/salud` devuelve en JSON el estado de cada pieza, con un 200 si todo va bien y un 503 si algo falla, y el front lo enseña en su panel de estado.
+
+Antes de desplegar puedes ver qué se va a crear, sin tocar nada:
+
+```powershell
+az deployment group what-if -g rg-tienda-pruebas --template-file azure/main.bicep -p responsable=tu.nombre@tuempresa.com sqlAdminPassword=<la de tu fichero> presupuestoMensual=<el tuyo>
+```
 
 ## Probarla en local
 
@@ -75,3 +83,7 @@ El plan de App Service es el gratuito (F1) y la base usa la oferta gratuita de A
 ```powershell
 pwsh -ExecutionPolicy Bypass -File .\azure\borrar.ps1
 ```
+
+## Un aviso
+
+Es una versión pensada para enseñarla en clase, no para producción. La web entra a la base con usuario y contraseña, y no hay red privada, borde con cortafuegos, escalado ni cola. Lo que añadiría la versión de producción, y por qué, se explica en el módulo 6 del curso y está resumido en `docs/lista-comprobacion.md`.
