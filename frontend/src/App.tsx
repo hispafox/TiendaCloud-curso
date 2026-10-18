@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { leerEstado, listarProductos, pedir, ultimosPedidos } from './api.ts'
+import { leerEstado, leerMensaje, listarProductos, pedir, ultimosPedidos } from './api.ts'
 import Estado from './Estado.tsx'
 import type { PedidoVista, Producto, ResultadoComprobacion } from './tipos.ts'
 import './App.css'
@@ -10,6 +10,7 @@ export default function App() {
   const [productos, setProductos] = useState<Producto[]>([])
   const [pedidos, setPedidos] = useState<PedidoVista[]>([])
   const [estado, setEstado] = useState<ResultadoComprobacion[]>([])
+  const [mensaje, setMensaje] = useState<string | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
 
   const cargar = useCallback(async () => {
@@ -27,6 +28,9 @@ export default function App() {
     leerEstado()
       .then(setEstado)
       .catch(() => setEstado([]))
+    leerMensaje()
+      .then(setMensaje)
+      .catch(() => setMensaje(null))
   }, [cargar])
 
   async function alPedir(producto: Producto) {
@@ -45,6 +49,7 @@ export default function App() {
       <header>
         <h1>La tienda</h1>
         <p>El catálogo de la tienda del curso, servido por su API .NET.</p>
+        {mensaje && <p className="mensaje">Mensaje del Key Vault: «{mensaje}»</p>}
       </header>
 
       {aviso && (

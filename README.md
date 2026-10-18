@@ -2,7 +2,7 @@
 
 La tienda online del curso de arquitectura cloud, montada en **Azure** paso a paso. Cada módulo del curso sube una parte más de la tienda, y cada parte tiene su rama en este repositorio.
 
-> **Estás en `modulo-3/datos`.** El catálogo y los pedidos ya viven en Azure SQL Database, y las fotos de los productos en Blob Storage. La web entra a los dos con contraseña y con clave: el módulo 4 lo cambia.
+> **Estás en `modulo-4/identidad-y-secretos`.** La web tiene su propia identidad: con ella lee las fotos, sin clave, y el mensaje de un Key Vault. La base de datos sigue entrando con usuario y contraseña.
 
 ## Las ramas del curso
 
@@ -23,11 +23,11 @@ Cada rama añade un paso a la anterior. Para ver una, `git checkout <rama>`; par
 
 | Carpeta | Qué es |
 |---|---|
-| `azure/main.bicep` | La infraestructura: plan y web de App Service, base de datos SQL, almacenamiento con su contenedor de fotos y su ciclo de vida, y etiquetas en todo |
+| `azure/main.bicep` | La infraestructura: plan y web de App Service con su identidad, base de datos SQL, almacenamiento con su contenedor de fotos y su ciclo de vida, Key Vault con un mensaje, los dos permisos de la identidad y etiquetas en todo |
 | `azure/desplegar.ps1` | Crea el grupo, despliega el Bicep, compila el front, publica la API con el front dentro y espera a que `/salud` responda |
-| `azure/borrar.ps1` | Borra el grupo de recursos entero |
+| `azure/borrar.ps1` | Borra el grupo de recursos entero y purga el Key Vault |
 | `azure/deploy.secrets.example.ps1` | La plantilla de valores: suscripción, región, grupo, responsable y contraseña de la base |
-| `src/Tienda.Api` | La API .NET 10: catálogo, pedidos, fotos y `/salud`. En Azure sirve también el front |
+| `src/Tienda.Api` | La API .NET 10: catálogo, pedidos, fotos, el mensaje del Key Vault y `/salud`. En Azure sirve también el front |
 | `frontend` | El front: React, Vite y TypeScript |
 | `tests/Tienda.Api.Tests` | Los tests de la API (xUnit) |
 | `docs/` | Un fichero por módulo: qué hace cada rama y cómo se comprueba |
@@ -37,7 +37,7 @@ Cada rama añade un paso a la anterior. Para ver una, `git checkout <rama>`; par
 - La CLI de Azure (`az version`).
 - El SDK de .NET 10 (`dotnet --version`).
 - Node.js con npm (`node --version`).
-- Permisos para crear recursos en una suscripción de pruebas.
+- Permisos para crear recursos y asignar roles en una suscripción de pruebas (el rol Owner los da los dos).
 
 ## Montarla
 
@@ -68,7 +68,7 @@ En local, sin Azure, la API usa el catálogo en memoria y las fotos que lleva de
 
 ## Lo que cuesta
 
-El plan de App Service es el gratuito (F1) y la base usa la oferta gratuita de Azure SQL Database, que se pausa sola cuando nadie la usa. El almacenamiento no tiene plan gratuito: se pagan por uso, en su nivel más barato, y con lo que mueve la tienda el uso es mínimo. Aun así, bórrala con `borrar.ps1` al acabar cada sesión.
+El plan de App Service es el gratuito (F1) y la base usa la oferta gratuita de Azure SQL Database, que se pausa sola cuando nadie la usa. El almacenamiento y el Key Vault no tienen plan gratuito: se pagan por uso, en su nivel más barato, y con lo que mueve la tienda el uso es mínimo. Aun así, bórrala con `borrar.ps1` al acabar cada sesión.
 
 ## Borrarla
 

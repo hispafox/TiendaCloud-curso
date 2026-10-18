@@ -28,6 +28,7 @@ describe('App', () => {
       vi.fn((url: string, init?: RequestInit) => {
         if (url === '/api/productos') return respuesta(productos)
         if (url === '/salud') return respuesta(salud, 503)
+        if (url === '/api/mensaje') return respuesta({ mensaje: 'Hola desde el Key Vault de la tienda' })
         if (url === '/api/pedidos' && init?.method === 'POST') {
           const pedido = { id: 1, producto: 'Camiseta', cantidad: 1, fecha: '2026-10-19T09:30:00Z' }
           pedidos = [pedido]
@@ -70,11 +71,18 @@ describe('App', () => {
     expect(screen.getByText('Sin configurar: falta ConnectionStrings__Fotos.')).toBeInTheDocument()
   })
 
-  it('si la API falla, lo dice en la página', async () => {
+  it('enseña el mensaje que la web lee del Key Vault', async () => {
+    render(<App />)
+
+    expect(await screen.findByText('Mensaje del Key Vault: «Hola desde el Key Vault de la tienda»')).toBeInTheDocument()
+  })
+
+  it('si la API falla, lo dice en la página y no enseña mensaje', async () => {
     vi.stubGlobal('fetch', vi.fn(() => respuesta({ error: 'La API no responde.' }, 503)))
 
     render(<App />)
 
     expect(await screen.findByText('La API no responde.')).toBeInTheDocument()
+    expect(screen.queryByText(/Mensaje del Key Vault/)).not.toBeInTheDocument()
   })
 })

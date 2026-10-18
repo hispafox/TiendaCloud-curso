@@ -18,6 +18,12 @@ header p {
   color: #57606a;
 }
 
+.mensaje {
+  padding: 8px 16px;
+  border-left: 4px solid #8250df;
+  background: #fbefff;
+}
+
 .aviso {
   padding: 12px 16px;
   border-radius: 8px;

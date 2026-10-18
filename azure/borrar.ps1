@@ -4,8 +4,9 @@
 # Ejecuta desde la RAIZ del repositorio:
 #     pwsh -ExecutionPolicy Bypass -File .\azure\borrar.ps1
 #
-# Borra el grupo de recursos completo, con todo lo que tenga dentro. Si el
-# grupo no existe, lo dice y termina sin error.
+# Borra el grupo de recursos completo y despues purga el Key Vault: si no, se
+# queda unos dias en la papelera con su nombre reservado y el siguiente
+# desplegar.ps1 choca con el. Si el grupo no existe, lo dice y termina sin error.
 # =============================================================================
 
 $ErrorActionPreference = "Stop"
@@ -34,8 +35,20 @@ if ($existe -ne "true") {
     exit 0
 }
 
-Write-Host "==> [1/1] Borrando el grupo $GrupoRecursos (unos minutos)..." -ForegroundColor Cyan
+# Antes de borrar, se apuntan los Key Vault del grupo para purgarlos despues:
+# borrado el grupo, ya no aparecen en el.
+$vaults = az keyvault list -g $GrupoRecursos --query "[].name" -o tsv
+Assert-Ok "az keyvault list"
+
+Write-Host "==> [1/2] Borrando el grupo $GrupoRecursos (unos minutos)..." -ForegroundColor Cyan
 az group delete -n $GrupoRecursos --yes
 Assert-Ok "az group delete"
+
+Write-Host "==> [2/2] Purgando el Key Vault" -ForegroundColor Cyan
+foreach ($kv in ($vaults -split "`n" | Where-Object { $_.Trim() })) {
+    az keyvault purge --name $kv.Trim() | Out-Null
+    Assert-Ok "az keyvault purge $kv"
+    Write-Host "    Purgado: $kv" -ForegroundColor Green
+}
 
 Write-Host "`nLISTO. La tienda esta borrada y ya no cuesta nada." -ForegroundColor Green

@@ -89,8 +89,20 @@ public class ApiTests
         Assert.Equal(HttpStatusCode.ServiceUnavailable, respuesta.StatusCode);
         var filas = await respuesta.Content.ReadFromJsonAsync<List<ResultadoComprobacion>>();
         Assert.NotNull(filas);
-        Assert.Equal(["Base de datos", "Almacenamiento"], filas.Select(f => f.Nombre));
+        Assert.Equal(["Base de datos", "Almacenamiento", "Key Vault"], filas.Select(f => f.Nombre));
         Assert.All(filas, f => Assert.False(f.Correcta));
+    }
+
+    [Fact]
+    public async Task Mensaje_sin_Key_Vault_configurado_devuelve_503_y_dice_que_falta()
+    {
+        await using var fabrica = new WebApplicationFactory<Program>();
+        var cliente = fabrica.CreateClient();
+
+        var respuesta = await cliente.GetAsync("/api/mensaje");
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, respuesta.StatusCode);
+        Assert.Contains("Tienda__KeyVaultUri", await respuesta.Content.ReadAsStringAsync());
     }
 
     [Fact]
