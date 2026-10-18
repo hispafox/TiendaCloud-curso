@@ -2,7 +2,7 @@
 
 La tienda online del curso de arquitectura cloud, montada en **Azure** paso a paso. Cada módulo del curso sube una parte más de la tienda, y cada parte tiene su rama en este repositorio.
 
-> **Estás en `modulo-4/identidad-y-secretos`.** La web tiene su propia identidad: con ella lee las fotos, sin clave, y el mensaje de un Key Vault. La base de datos sigue entrando con usuario y contraseña.
+> **Estás en `modulo-5/costes`.** La tienda tiene su presupuesto: un importe mensual para el grupo, con avisos al responsable cuando el gasto previsto pasa del 50, el 90 y el 100 %.
 
 ## Las ramas del curso
 
@@ -23,10 +23,11 @@ Cada rama añade un paso a la anterior. Para ver una, `git checkout <rama>`; par
 
 | Carpeta | Qué es |
 |---|---|
-| `azure/main.bicep` | La infraestructura: plan y web de App Service con su identidad, base de datos SQL, almacenamiento con su contenedor de fotos y su ciclo de vida, Key Vault con un mensaje, los dos permisos de la identidad y etiquetas en todo |
+| `azure/main.bicep` | La infraestructura: plan y web de App Service con su identidad, base de datos SQL, almacenamiento con su contenedor de fotos y su ciclo de vida, Key Vault con un mensaje, los dos permisos de la identidad, el presupuesto del grupo y etiquetas en todo |
 | `azure/desplegar.ps1` | Crea el grupo, despliega el Bicep, compila el front, publica la API con el front dentro y espera a que `/salud` responda |
-| `azure/borrar.ps1` | Borra el grupo de recursos entero y purga el Key Vault |
-| `azure/deploy.secrets.example.ps1` | La plantilla de valores: suscripción, región, grupo, responsable y contraseña de la base |
+| `azure/borrar.ps1` | Borra el presupuesto, el grupo de recursos entero, y purga el Key Vault |
+| `azure/ver-cambios.ps1` | Enseña qué cambiaría el despliegue (el what-if), sin desplegar nada |
+| `azure/deploy.secrets.example.ps1` | La plantilla de valores: suscripción, región, grupo, responsable, contraseña de la base e importe del presupuesto |
 | `src/Tienda.Api` | La API .NET 10: catálogo, pedidos, fotos, el mensaje del Key Vault y `/salud`. En Azure sirve también el front |
 | `frontend` | El front: React, Vite y TypeScript |
 | `tests/Tienda.Api.Tests` | Los tests de la API (xUnit) |
@@ -49,6 +50,12 @@ pwsh -ExecutionPolicy Bypass -File .\azure\desplegar.ps1
 ```
 
 Al terminar escribe la URL de la tienda. `/salud` devuelve en JSON el estado de cada pieza, con un 200 si todo va bien y un 503 si algo falla, y el front lo enseña en su panel de estado.
+
+Antes de desplegar puedes ver qué se va a crear, sin desplegar nada:
+
+```powershell
+pwsh -ExecutionPolicy Bypass -File .\azure\ver-cambios.ps1
+```
 
 ## Probarla en local
 
