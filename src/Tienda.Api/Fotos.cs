@@ -13,10 +13,11 @@ public interface IAlmacenFotos
     Task<FotoLeida?> AbrirAsync(string nombre, CancellationToken ct);
 }
 
-// Las fotos de ejemplo, metidas dentro de la propia web (Fotos\*.svg).
+// Las fotos de ejemplo, metidas dentro de la propia web (Fotos\*.jpg). Son
+// fotorrealistas, generadas con Gamma.
 public static class FotosEjemplo
 {
-    public const string Tipo = "image/svg+xml";
+    public const string Tipo = "image/jpeg";
 
     public static IEnumerable<string> Nombres => DatosEjemplo.Productos().Select(p => p.Foto!);
 

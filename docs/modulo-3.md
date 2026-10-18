@@ -26,7 +26,7 @@ Son las decisiones del módulo 3. Los pedidos van a una relacional porque tienen
 |---|---|
 | `src/Tienda.Api/CatalogoSql.cs` | El catálogo en la base, con EF Core. La primera vez crea las tablas y carga los seis productos. Pedir resta las existencias y guarda el pedido en la misma transacción: o pasan las dos cosas o ninguna. Si la base estaba en pausa, EF Core reintenta la conexión mientras se despierta |
 | `src/Tienda.Api/Fotos.cs` | Las fotos en Blob Storage. La web sube las de ejemplo la primera vez y las sirve en `/api/productos/{id}/foto` |
-| `src/Tienda.Api/Fotos/*.svg` | Las seis fotos de ejemplo, dentro de la propia web |
+| `src/Tienda.Api/Fotos/*.jpg` | Las seis fotos de ejemplo, fotorrealistas, generadas con Gamma, dentro de la propia web |
 | `src/Tienda.Api/Comprobaciones.cs` | Las comprobaciones de la base y del almacenamiento, y `/salud` |
 | `frontend` | La foto en cada producto y el panel «Estado de la tienda», con una fila por pieza |
 | `tests/Tienda.Api.Tests` | 30 tests: se suman el catálogo en SQLite en memoria, las comprobaciones, `/salud` y las fotos |

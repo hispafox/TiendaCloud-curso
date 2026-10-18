@@ -17,7 +17,7 @@
 
   <!-- Las fotos de ejemplo van dentro de la web: la primera vez las sube al almacenamiento. -->
   <ItemGroup>
-    <EmbeddedResource Include="Fotos\*.svg" LogicalName="Fotos.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Fotos\*.jpg" LogicalName="Fotos.%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>

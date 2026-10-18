@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App.tsx'
 
-const productos = [{ id: 1, nombre: 'Camiseta', descripcion: 'De algodón.', existencias: 2, foto: 'camiseta.svg' }]
+const productos = [{ id: 1, nombre: 'Camiseta', descripcion: 'De algodón.', existencias: 2, foto: 'camiseta.jpg' }]
 
 const salud = [
   { nombre: 'Base de datos', correcta: true, detalle: 'Catálogo leído de la base: 6 productos.' },

@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Taza">
-  <rect width="400" height="300" fill="#ffebe9"/>
-  <path d="M175 70 q-10 -20 0 -40 M205 70 q-10 -20 0 -40 M235 70 q-10 -20 0 -40" fill="none" stroke="#ff8182" stroke-width="6" stroke-linecap="round"/>
-  <path d="M255 125 h25 a35 35 0 0 1 0 70 h-25" fill="none" stroke="#cf222e" stroke-width="16"/>
-  <rect x="140" y="90" width="120" height="150" rx="14" fill="#cf222e"/>
-  <rect x="120" y="240" width="160" height="12" rx="6" fill="#a40e26"/>
-</svg>

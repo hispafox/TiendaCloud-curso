@@ -56,7 +56,7 @@ public class ApiTests
     }
 
     [Fact]
-    public async Task Get_foto_de_un_producto_devuelve_su_svg()
+    public async Task Get_foto_de_un_producto_devuelve_su_jpg()
     {
         await using var fabrica = new WebApplicationFactory<Program>();
         var cliente = fabrica.CreateClient();
@@ -64,7 +64,7 @@ public class ApiTests
         var respuesta = await cliente.GetAsync("/api/productos/1/foto");
 
         Assert.Equal(HttpStatusCode.OK, respuesta.StatusCode);
-        Assert.Equal("image/svg+xml", respuesta.Content.Headers.ContentType?.MediaType);
+        Assert.Equal("image/jpeg", respuesta.Content.Headers.ContentType?.MediaType);
     }
 
     [Fact]

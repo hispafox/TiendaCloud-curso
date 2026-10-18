@@ -13,17 +13,17 @@ public class FotosTests
     }
 
     [Fact]
-    public async Task El_almacen_local_devuelve_la_foto_como_svg()
+    public async Task El_almacen_local_devuelve_la_foto_como_jpg()
     {
-        var foto = await new AlmacenFotosLocal().AbrirAsync("taza.svg", CancellationToken.None);
+        var foto = await new AlmacenFotosLocal().AbrirAsync("taza.jpg", CancellationToken.None);
 
         Assert.NotNull(foto);
-        Assert.Equal("image/svg+xml", foto.Tipo);
+        Assert.Equal("image/jpeg", foto.Tipo);
     }
 
     [Fact]
     public async Task El_almacen_local_no_inventa_fotos_que_no_tiene()
     {
-        Assert.Null(await new AlmacenFotosLocal().AbrirAsync("no-existe.svg", CancellationToken.None));
+        Assert.Null(await new AlmacenFotosLocal().AbrirAsync("no-existe.jpg", CancellationToken.None));
     }
 }
