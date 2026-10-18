@@ -1,3 +1,5 @@
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
 using Azure.Storage.Blobs;
 
 namespace Tienda.Api;
@@ -15,6 +17,9 @@ public interface IComprobacion
 // Configuracion que el Bicep deja en los App Settings de la web.
 public sealed class OpcionesTienda
 {
+    public string? KeyVaultUri { get; set; }
+    public string? NombreSecreto { get; set; } = "mensaje";
+    public string? BlobUri { get; set; }
     public string Contenedor { get; set; } = "fotos";
 }
 
@@ -57,20 +62,37 @@ public sealed class ComprobacionBaseDatos(string? cadenaConexion, IServiceScopeF
     }
 }
 
-// Almacenamiento: la web lista el contenedor de fotos con la clave de la cuenta (modulo 3).
-public sealed class ComprobacionAlmacenamiento(string? cadenaConexion, string contenedor) : IComprobacion
+// Almacenamiento: la web lista el contenedor de fotos con su identidad (modulos 3 y 4).
+public sealed class ComprobacionAlmacenamiento(OpcionesTienda opciones) : IComprobacion
 {
     public string Nombre => "Almacenamiento";
 
     public async Task<ResultadoComprobacion> EjecutarAsync(CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(cadenaConexion))
-            return new ResultadoComprobacion(Nombre, false, "Sin configurar: falta ConnectionStrings__Fotos.");
+        if (string.IsNullOrWhiteSpace(opciones.BlobUri))
+            return new ResultadoComprobacion(Nombre, false, "Sin configurar: falta Tienda__BlobUri.");
 
-        var cliente = new BlobContainerClient(cadenaConexion, contenedor);
+        var servicio = new BlobServiceClient(new Uri(opciones.BlobUri), new DefaultAzureCredential());
+        var contenedor = servicio.GetBlobContainerClient(opciones.Contenedor);
         var total = 0;
-        await foreach (var _ in cliente.GetBlobsAsync(cancellationToken: ct))
+        await foreach (var _ in contenedor.GetBlobsAsync(cancellationToken: ct))
             total++;
-        return new ResultadoComprobacion(Nombre, true, $"Contenedor «{contenedor}»: {total} fichero(s).");
+        return new ResultadoComprobacion(Nombre, true, $"Contenedor «{opciones.Contenedor}»: {total} fichero(s).");
+    }
+}
+
+// Key Vault: la web lee el mensaje con su identidad, sin contrasena (modulo 4).
+public sealed class ComprobacionKeyVault(OpcionesTienda opciones) : IComprobacion
+{
+    public string Nombre => "Key Vault";
+
+    public async Task<ResultadoComprobacion> EjecutarAsync(CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(opciones.KeyVaultUri))
+            return new ResultadoComprobacion(Nombre, false, "Sin configurar: falta Tienda__KeyVaultUri.");
+
+        var cliente = new SecretClient(new Uri(opciones.KeyVaultUri), new DefaultAzureCredential());
+        var secreto = await cliente.GetSecretAsync(opciones.NombreSecreto, cancellationToken: ct);
+        return new ResultadoComprobacion(Nombre, true, secreto.Value.Value);
     }
 }
