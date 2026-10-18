@@ -26,6 +26,8 @@ Lo que hace cada rama, cómo se lanza, qué mirar en el Portal y cómo se compru
 | `azure/main.bicep` | La infraestructura entera: plan y web de App Service con su identidad, base de datos SQL, almacenamiento con su contenedor de fotos y su ciclo de vida, Key Vault con un mensaje, los dos permisos de la identidad, el presupuesto del grupo y etiquetas en todo |
 | `azure/desplegar.ps1` | Monta la tienda: crea el grupo, despliega el Bicep, compila el front, publica la API con el front dentro y espera a que `/salud` responda |
 | `azure/borrar.ps1` | Borra el presupuesto y el grupo de recursos entero, y purga el Key Vault, para que no siga costando dinero |
+| `azure/ver-cambios.ps1` | Enseña qué cambiaría el despliegue (el what-if), sin desplegar nada |
+| `azure/provocar-fallo.ps1` | Quita a la web su permiso sobre el Key Vault, para el fallo provocado de la demo del módulo 6 |
 | `azure/deploy.secrets.example.ps1` | La plantilla de valores: suscripción, región, grupo, responsable, contraseña de la base e importe del presupuesto |
 | `src/Tienda.Api` | La API .NET 10: catálogo, pedidos, fotos, el mensaje del Key Vault y `/salud`. En Azure sirve también el front |
 | `frontend` | El front: React, Vite y TypeScript |
@@ -52,10 +54,10 @@ pwsh -ExecutionPolicy Bypass -File .\azure\desplegar.ps1
 
 Al terminar escribe la URL de la tienda. `/salud` devuelve en JSON el estado de cada pieza, con un 200 si todo va bien y un 503 si algo falla, y el front lo enseña en su panel de estado.
 
-Antes de desplegar puedes ver qué se va a crear, sin tocar nada:
+Antes de desplegar puedes ver qué se va a crear, sin desplegar nada:
 
 ```powershell
-az deployment group what-if -g rg-tienda-pruebas --template-file azure/main.bicep -p responsable=tu.nombre@tuempresa.com sqlAdminPassword=<la de tu fichero> presupuestoMensual=<el tuyo>
+pwsh -ExecutionPolicy Bypass -File .\azure\ver-cambios.ps1
 ```
 
 ## Probarla en local

@@ -12,8 +12,9 @@ Todo lo de los módulos 1 a 5, de una vez y **en un grupo vacío**: el grupo con
 |---|---|
 | `docs/lista-comprobacion.md` | La lista de comprobación del módulo 6: una pregunta por pilar, con la versión básica de este repositorio y la de producción |
 | `README.md` | El de la tienda terminada, con la tabla de ramas |
+| `azure/provocar-fallo.ps1` | Quita a la web su rol sobre el Key Vault, para el fallo provocado de la demo (paso 6). La vuelta es otro `desplegar.ps1` |
 
-La aplicación y los scripts no cambian: `desplegar.ps1` ya monta la tienda entera desde cero. El paso de este módulo es hacerlo de una vez, en un grupo que no existe, y revisarlo con la lista.
+La aplicación no cambia, y `desplegar.ps1` ya monta la tienda entera desde cero; se suma solo el script del fallo provocado. El paso de este módulo es hacerlo de una vez, en un grupo que no existe, y revisarlo con la lista.
 
 ## Cómo se lanza
 
@@ -25,20 +26,22 @@ pwsh -ExecutionPolicy Bypass -File .\azure\borrar.ps1
 pwsh -ExecutionPolicy Bypass -File .\azure\desplegar.ps1
 ```
 
-Antes de desplegar, la lista de lo que se va a crear, sin tocar nada (el grupo tiene que existir: créalo con `az group create` o lanza antes el script del módulo 1):
+Antes de desplegar, la lista de lo que se va a crear, sin desplegar nada:
 
 ```powershell
-az deployment group what-if -g rg-tienda-pruebas --template-file azure/main.bicep -p responsable=tu.nombre@tuempresa.com sqlAdminPassword=<la de tu fichero> presupuestoMensual=<el tuyo>
+pwsh -ExecutionPolicy Bypass -File .\azure\ver-cambios.ps1
 ```
+
+Si el grupo no existe, el script lo crea vacío para poder comparar, y todo sale como nuevo.
 
 ## El recorrido de la demo
 
 1. `azure/main.bicep`, bloque a bloque: cada recurso, su módulo y lo que necesita.
-2. `az deployment group what-if`: la lista de lo que se va a crear, antes de crearlo.
+2. `ver-cambios.ps1`: el what-if, la lista de lo que se va a crear, antes de crearlo.
 3. `desplegar.ps1` en marcha, paso a paso, hasta que escribe la URL de la tienda.
 4. El grupo de recursos en el Portal: los recursos creados y sus etiquetas.
 5. La tienda: el catálogo con sus fotos, el mensaje del Key Vault y el panel de estado con sus tres filas en verde.
-6. Un fallo provocado: en el Key Vault, **Access control (IAM)**, se quita el rol **Key Vault Secrets User** a la web. Al recargar, la fila del Key Vault sale en rojo y el mensaje desaparece, mientras la base y el almacenamiento siguen en verde. Se vuelve a poner con otro `desplegar.ps1`: el Bicep repone lo que falta.
+6. Un fallo provocado: `provocar-fallo.ps1` le quita a la web el rol **Key Vault Secrets User** sobre el Key Vault. En el Portal, en el Key Vault, **Access control (IAM)** > **Role assignments**, la asignación ya no está. Al recargar, la fila del Key Vault sale en rojo y el mensaje desaparece, mientras la base y el almacenamiento siguen en verde. Se vuelve a poner con otro `desplegar.ps1`: el Bicep repone lo que falta.
 7. `borrar.ps1`: el presupuesto y el grupo desaparecen, y el Key Vault se purga.
 
 El paso 6 es el que más enseña: un permiso que falta es de los fallos más frecuentes al montar una arquitectura, y verlo aislado en una sola fila dice exactamente qué decisión del diseño está fallando. Los permisos tardan unos minutos en aplicarse, así que tanto el rojo como la vuelta al verde pueden pedir un par de recargas.

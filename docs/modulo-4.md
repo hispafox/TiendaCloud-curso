@@ -46,7 +46,7 @@ Hace falta poder asignar roles en la suscripción: el rol Owner sobre una suscri
 
 - En la web, **Identity**: la identidad asignada por el sistema, en **On**.
 - En la web, **Environment variables**: ya no está la cadena del almacenamiento. Quedan dos direcciones y la cadena de la base.
-- En el Key Vault, **Access control (IAM)** > **Role assignments**: la web, con **Key Vault Secrets User**. Y en **Objects** > **Secrets**, el secreto `mensaje`.
+- En el Key Vault, **Access control (IAM)** > **Role assignments**: la web, con **Key Vault Secrets User**. Si abres **Objects** > **Secrets**, el Portal te dirá que no tienes permiso para ver el contenido, aunque seas Owner: con permisos por roles, gestionar el Key Vault no da acceso a sus secretos. Solo la web, con su rol, lee el mensaje, y lo ves en la tienda.
 - En la cuenta de almacenamiento, **Access control (IAM)**: la web, con **Storage Blob Data Contributor**.
 
 ## Cómo sabes que está bien

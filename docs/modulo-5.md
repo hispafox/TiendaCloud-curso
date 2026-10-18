@@ -22,6 +22,7 @@ El resto del módulo 5 ya estaba en la tienda desde el principio: las cuatro eti
 | `azure/desplegar.ps1` | Pasa el importe al Bicep |
 | `azure/deploy.secrets.example.ps1` | Suma `$PresupuestoMensual`, el importe en la moneda de tu suscripción |
 | `azure/borrar.ps1` | Borra el presupuesto antes que el grupo: es un objeto de Cost Management, y se quita aparte para que no se quede huérfano |
+| `azure/ver-cambios.ps1` | Nuevo: enseña qué cambiaría el despliegue (el what-if de Bicep), con los mismos valores de `deploy.secrets.ps1` y sin desplegar nada |
 
 La aplicación no cambia.
 
@@ -33,13 +34,13 @@ git checkout modulo-5/costes
 pwsh -ExecutionPolicy Bypass -File .\azure\desplegar.ps1
 ```
 
-Antes de lanzarlo, mira qué va a cambiar sin tocar nada. Es el plan antes de aplicar del módulo 5:
+Antes de lanzarlo, mira qué va a cambiar sin desplegar nada. Es el plan antes de aplicar del módulo 5, y lo hace otro script con los mismos valores:
 
 ```powershell
-az deployment group what-if -g rg-tienda-pruebas --template-file azure/main.bicep -p responsable=tu.nombre@tuempresa.com sqlAdminPassword=<la de tu fichero> presupuestoMensual=<el tuyo>
+pwsh -ExecutionPolicy Bypass -File .\azure\ver-cambios.ps1
 ```
 
-Con la tienda del módulo 4 ya montada, el presupuesto sale como nuevo (**Create**). En el resto de la lista, lo que se mira con cuidado es lo que se borra o se reemplaza.
+Enseña, recurso a recurso, qué se crearía (**Create**), qué se cambiaría (**Modify**) y qué quedaría igual. Si el grupo no existe, lo crea vacío para poder comparar, y entonces todo sale como nuevo; un grupo vacío no cuesta nada. Lo que se mira con cuidado es lo que se borraría o se reemplazaría.
 
 ## Las dos estimaciones, en la calculadora
 
