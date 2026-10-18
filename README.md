@@ -2,7 +2,7 @@
 
 La tienda online del curso de arquitectura cloud, montada en **Azure** paso a paso. Cada módulo del curso sube una parte más de la tienda, y cada parte tiene su rama en este repositorio.
 
-> **Estás en la tienda terminada.** `main` y `modulo-6/un-comando` tienen lo mismo: la tienda entera, que se monta desde cero con una orden y se borra con otra.
+> **Estás en la tienda terminada.** `main` y `modulo-6/un-comando` tienen la misma tienda: entera, se monta desde cero con una orden y se borra con otra. Este README, además, explica cómo pasar de una rama a otra.
 
 ## Las ramas del curso
 
@@ -84,6 +84,21 @@ El plan de App Service es el gratuito (F1) y la base usa la oferta gratuita de A
 
 ```powershell
 pwsh -ExecutionPolicy Bypass -File .\azure\borrar.ps1
+```
+
+## Pasar de una rama a otra
+
+Cada rama monta su etapa desde un grupo vacío, así que puedes empezar por la que quieras. Dos cosas para que salga bien:
+
+1. **Rellena `azure/deploy.secrets.ps1` una sola vez, con los seis valores de la plantilla de `main`.** Ese fichero está en `.gitignore`, así que no cambia al hacer `git checkout`, y las ramas que no usan un valor lo ignoran. La plantilla de cada rama solo trae los valores que usa esa rama.
+2. **Borra con el `borrar.ps1` de la rama que desplegaste, o con el de `main`.** El de las ramas 1 a 3 no purga el Key Vault, y el de las ramas 1 a 4 no borra el presupuesto. Si montas la 4 y borras con la 3, el Key Vault se queda en la papelera con su nombre reservado, y el siguiente despliegue choca con él. El de `main` lo cubre todo.
+
+Por ejemplo, para empezar por la rama 2 con otra ya montada: `borrar.ps1` desde la rama montada o desde `main`, después `git checkout modulo-2/app-service` y `desplegar.ps1`.
+
+```powershell
+pwsh -ExecutionPolicy Bypass -File .\azure\borrar.ps1
+git checkout modulo-2/app-service
+pwsh -ExecutionPolicy Bypass -File .\azure\desplegar.ps1
 ```
 
 ## Un aviso
