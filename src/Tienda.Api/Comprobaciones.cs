@@ -1,9 +1,8 @@
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 using Azure.Storage.Blobs;
-using Microsoft.Data.SqlClient;
 
-namespace Tienda.Web;
+namespace Tienda.Api;
 
 // Lo que devuelve cada comprobacion: si ha ido bien y que ha visto.
 public sealed record ResultadoComprobacion(string Nombre, bool Correcta, string Detalle);
@@ -21,7 +20,7 @@ public sealed class OpcionesTienda
     public string? KeyVaultUri { get; set; }
     public string? NombreSecreto { get; set; } = "mensaje";
     public string? BlobUri { get; set; }
-    public string? Contenedor { get; set; } = "fotos";
+    public string Contenedor { get; set; } = "fotos";
 }
 
 // Ejecuta una comprobacion sin dejar que una excepcion tumbe la pagina entera.
@@ -40,23 +39,30 @@ public static class EjecutorComprobaciones
     }
 }
 
-// Key Vault: la web lee el mensaje con su identidad, sin contrasena (modulo 4).
-public sealed class ComprobacionKeyVault(OpcionesTienda opciones) : IComprobacion
+// Decide si la tienda esta entera. Lo usa /salud; el panel de estado del front lo ensena fila a fila.
+public static class PaginaEstado
 {
-    public string Nombre => "Key Vault";
+    public static bool TodoCorrecto(IReadOnlyCollection<ResultadoComprobacion> resultados) =>
+        resultados.Count > 0 && resultados.All(r => r.Correcta);
+}
+
+// Base de datos: la web lee el catalogo de la base (modulo 3).
+public sealed class ComprobacionBaseDatos(string? cadenaConexion, IServiceScopeFactory scopes) : IComprobacion
+{
+    public string Nombre => "Base de datos";
 
     public async Task<ResultadoComprobacion> EjecutarAsync(CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(opciones.KeyVaultUri))
-            return new ResultadoComprobacion(Nombre, false, "Sin configurar: falta Tienda__KeyVaultUri.");
+        if (string.IsNullOrWhiteSpace(cadenaConexion))
+            return new ResultadoComprobacion(Nombre, false, "Sin configurar: falta ConnectionStrings__Pedidos.");
 
-        var cliente = new SecretClient(new Uri(opciones.KeyVaultUri), new DefaultAzureCredential());
-        var secreto = await cliente.GetSecretAsync(opciones.NombreSecreto, cancellationToken: ct);
-        return new ResultadoComprobacion(Nombre, true, secreto.Value.Value);
+        await using var scope = scopes.CreateAsyncScope();
+        var productos = await scope.ServiceProvider.GetRequiredService<ICatalogo>().ListarProductosAsync(ct);
+        return new ResultadoComprobacion(Nombre, true, $"Catálogo leído de la base: {productos.Count} productos.");
     }
 }
 
-// Almacenamiento: la web lista el contenedor de fotos con su identidad (modulo 3).
+// Almacenamiento: la web lista el contenedor de fotos con su identidad (modulos 3 y 4).
 public sealed class ComprobacionAlmacenamiento(OpcionesTienda opciones) : IComprobacion
 {
     public string Nombre => "Almacenamiento";
@@ -75,31 +81,18 @@ public sealed class ComprobacionAlmacenamiento(OpcionesTienda opciones) : ICompr
     }
 }
 
-// Base de datos: la web guarda un pedido de prueba y cuenta los que hay (modulo 3).
-public sealed class ComprobacionBaseDatos(string? cadenaConexion) : IComprobacion
+// Key Vault: la web lee el mensaje con su identidad, sin contrasena (modulo 4).
+public sealed class ComprobacionKeyVault(OpcionesTienda opciones) : IComprobacion
 {
-    public string Nombre => "Base de datos";
-
-    private const string Sql = """
-        IF OBJECT_ID('dbo.Pedidos') IS NULL
-            CREATE TABLE dbo.Pedidos (
-                Id INT IDENTITY(1,1) PRIMARY KEY,
-                Producto NVARCHAR(100) NOT NULL,
-                Fecha DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
-            );
-        INSERT INTO dbo.Pedidos (Producto) VALUES (N'Pedido de prueba');
-        SELECT COUNT(*) FROM dbo.Pedidos;
-        """;
+    public string Nombre => "Key Vault";
 
     public async Task<ResultadoComprobacion> EjecutarAsync(CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(cadenaConexion))
-            return new ResultadoComprobacion(Nombre, false, "Sin configurar: falta ConnectionStrings__Pedidos.");
+        if (string.IsNullOrWhiteSpace(opciones.KeyVaultUri))
+            return new ResultadoComprobacion(Nombre, false, "Sin configurar: falta Tienda__KeyVaultUri.");
 
-        await using var conexion = new SqlConnection(cadenaConexion);
-        await conexion.OpenAsync(ct);
-        await using var comando = new SqlCommand(Sql, conexion);
-        var total = Convert.ToInt32(await comando.ExecuteScalarAsync(ct));
-        return new ResultadoComprobacion(Nombre, true, $"Pedido guardado. Pedidos en la tabla: {total}.");
+        var cliente = new SecretClient(new Uri(opciones.KeyVaultUri), new DefaultAzureCredential());
+        var secreto = await cliente.GetSecretAsync(opciones.NombreSecreto, cancellationToken: ct);
+        return new ResultadoComprobacion(Nombre, true, secreto.Value.Value);
     }
 }

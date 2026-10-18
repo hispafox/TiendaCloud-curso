@@ -1,25 +1,43 @@
 # TiendaCloud-curso
 
-La tienda online del curso de arquitectura cloud, montada en **Azure** en su versión básica: una web .NET en App Service, una base de pedidos en Azure SQL Database, las fotos en Blob Storage y un Key Vault con un único mensaje que la web lee con su propia identidad.
+La tienda online del curso de arquitectura cloud, montada en **Azure** paso a paso. Cada módulo del curso sube una parte más de la tienda, y cada parte tiene su rama en este repositorio.
 
-Todo se crea con una orden y se borra con otra.
+> **Estás en la tienda terminada.** `main` y `modulo-6/un-comando` tienen lo mismo: la tienda entera, que se monta desde cero con una orden y se borra con otra.
+
+## Las ramas del curso
+
+Cada rama añade un paso a la anterior. Para ver una, `git checkout <rama>`; para montarla, el mismo `desplegar.ps1` en todas.
+
+| Módulo | Rama | Qué añade |
+|---|---|---|
+| 1 | `modulo-1/grupo-de-recursos` | El grupo de recursos con sus etiquetas, y los scripts que montan y borran la tienda |
+| 2 | `modulo-2/app-service` | La tienda: una API .NET y un front React, publicados en App Service, con el catálogo en memoria |
+| 3 | `modulo-3/datos` | El catálogo y los pedidos en Azure SQL Database, y las fotos en Blob Storage con su ciclo de vida |
+| 4 | `modulo-4/identidad-y-secretos` | La identidad de la web, un Key Vault con su mensaje, y las fotos sin clave |
+| 5 | `modulo-5/costes` | El presupuesto del grupo, con avisos al responsable |
+| 6 | `modulo-6/un-comando` | La tienda entera desde cero con una orden, y la lista de comprobación del pilar |
+
+Lo que hace cada rama, cómo se lanza, qué mirar en el Portal y cómo se comprueba está en `docs/`, un fichero por módulo. La lista de comprobación, en `docs/lista-comprobacion.md`.
 
 ## Qué hay dentro
 
 | Carpeta | Qué es |
 |---|---|
-| `azure/main.bicep` | La infraestructura entera: plan y web de App Service, SQL, almacenamiento, Key Vault, permisos de la identidad de la web y etiquetas en todo |
-| `azure/desplegar.ps1` | Monta la tienda: crea el grupo de recursos, despliega el Bicep, publica la aplicación y comprueba que responde |
-| `azure/borrar.ps1` | Borra el grupo de recursos entero y purga el Key Vault, para que no siga costando dinero |
-| `azure/deploy.secrets.example.ps1` | La plantilla de valores (suscripción, región, grupo, responsable y contraseña de la base) |
-| `src/Tienda.Web` | La aplicación: una página que comprueba el Key Vault, el almacenamiento y la base de datos |
-| `tests/Tienda.Web.Tests` | Los tests (xUnit) |
+| `azure/main.bicep` | La infraestructura entera: plan y web de App Service con su identidad, base de datos SQL, almacenamiento con su contenedor de fotos y su ciclo de vida, Key Vault con un mensaje, los dos permisos de la identidad, el presupuesto del grupo y etiquetas en todo |
+| `azure/desplegar.ps1` | Monta la tienda: crea el grupo, despliega el Bicep, compila el front, publica la API con el front dentro y espera a que `/salud` responda |
+| `azure/borrar.ps1` | Borra el presupuesto y el grupo de recursos entero, y purga el Key Vault, para que no siga costando dinero |
+| `azure/deploy.secrets.example.ps1` | La plantilla de valores: suscripción, región, grupo, responsable, contraseña de la base e importe del presupuesto |
+| `src/Tienda.Api` | La API .NET 10: catálogo, pedidos, fotos, el mensaje del Key Vault y `/salud`. En Azure sirve también el front |
+| `frontend` | El front: React, Vite y TypeScript |
+| `tests/Tienda.Api.Tests` | Los tests de la API (xUnit) |
+| `docs/` | Un fichero por módulo y la lista de comprobación |
 
 ## Lo que necesitas
 
 - La CLI de Azure (`az version`).
 - El SDK de .NET 10 (`dotnet --version`).
-- Permisos para crear recursos y asignar roles en una suscripción de pruebas.
+- Node.js con npm (`node --version`).
+- Permisos para crear recursos y asignar roles en una suscripción de pruebas (el rol Owner los da los dos).
 
 No hacen falta contenedores ni ninguna otra herramienta.
 
@@ -32,13 +50,29 @@ No hacen falta contenedores ni ninguna otra herramienta.
 pwsh -ExecutionPolicy Bypass -File .\azure\desplegar.ps1
 ```
 
-Al terminar escribe la URL de la tienda. La página enseña las tres comprobaciones; `/salud` devuelve lo mismo en JSON, con un 200 si todo va bien y un 503 si algo falla.
+Al terminar escribe la URL de la tienda. `/salud` devuelve en JSON el estado de cada pieza, con un 200 si todo va bien y un 503 si algo falla, y el front lo enseña en su panel de estado.
 
 Antes de desplegar puedes ver qué se va a crear, sin tocar nada:
 
 ```powershell
-az deployment group what-if -g rg-tienda-pruebas --template-file azure/main.bicep -p responsable=tu.nombre@tuempresa.com sqlAdminPassword=<la de tu fichero>
+az deployment group what-if -g rg-tienda-pruebas --template-file azure/main.bicep -p responsable=tu.nombre@tuempresa.com sqlAdminPassword=<la de tu fichero> presupuestoMensual=<el tuyo>
 ```
+
+## Probarla en local
+
+La API en `https://localhost:5001` (certificado de desarrollo de .NET) y el front en `http://localhost:5173`, que pasa `/api` y `/salud` a la API:
+
+```powershell
+dotnet run --project src/Tienda.Api
+```
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+En local, sin Azure, la API usa el catálogo en memoria y las fotos que lleva dentro, y el panel de estado dice qué falta por configurar. Los tests: `dotnet test` en la raíz y `npm test` en `frontend`.
 
 ## Borrarla
 
@@ -48,4 +82,4 @@ pwsh -ExecutionPolicy Bypass -File .\azure\borrar.ps1
 
 ## Un aviso
 
-Es una versión pensada para enseñarla en clase, no para producción. La web entra a la base con usuario y contraseña, y no hay red privada, borde con cortafuegos ni escalado. Lo que añadiría la versión de producción, y por qué, se explica en el módulo 6 del curso.
+Es una versión pensada para enseñarla en clase, no para producción. La web entra a la base con usuario y contraseña, y no hay red privada, borde con cortafuegos, escalado ni cola. Lo que añadiría la versión de producción, y por qué, se explica en el módulo 6 del curso y está resumido en `docs/lista-comprobacion.md`.

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Cuaderno">
+  <rect width="400" height="300" fill="#fff8c5"/>
+  <rect x="135" y="50" width="140" height="200" rx="10" fill="#bf8700"/>
+  <rect x="160" y="80" width="95" height="28" rx="4" fill="#fff8c5"/>
+  <path d="M165 140 h85 M165 165 h85 M165 190 h60" stroke="#fff8c5" stroke-width="6" stroke-linecap="round"/>
+  <g fill="#7d4e00">
+    <circle cx="135" cy="80" r="7"/><circle cx="135" cy="120" r="7"/><circle cx="135" cy="160" r="7"/><circle cx="135" cy="200" r="7"/>
+  </g>
+</svg>

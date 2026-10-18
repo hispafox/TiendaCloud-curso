@@ -1,12 +1,15 @@
 // =============================================================================
-// main.bicep - La tienda del curso, entera, en un grupo de recursos.
+// main.bicep - La tienda del curso, en un grupo de recursos.
 //
-// Cada bloque es una decision de un modulo del curso:
+// Cada rama del curso le anade los bloques de su modulo. En esta:
 //   modulo 1  etiquetas en todo, para saber de quien es cada recurso
-//   modulo 2  plan de App Service y la web .NET
-//   modulo 3  almacenamiento para las fotos y base de datos SQL para los pedidos
-//   modulo 4  identidad de la web y Key Vault con un unico secreto (un mensaje)
-//   modulo 5  todo descrito en este fichero: se crea y se borra con una orden
+//   modulo 2  plan de App Service y la web .NET, que sirve la API y el front
+//   modulo 3  base de datos SQL para el catalogo y los pedidos, y almacenamiento
+//             para las fotos, con su ciclo de vida
+//   modulo 4  identidad de la web y Key Vault con un unico secreto (un mensaje);
+//             la web entra al almacenamiento y al Key Vault sin clave
+//   modulo 5  el presupuesto del grupo, con avisos al responsable; y todo
+//             descrito en este fichero: se crea y se borra con una orden
 //
 // Lo despliega azure/desplegar.ps1. Lo borra azure/borrar.ps1.
 // =============================================================================
@@ -30,6 +33,12 @@ param sqlAdminPassword string
 @description('El mensaje que se guarda en el Key Vault y que la web ensena.')
 param mensaje string = 'Hola desde el Key Vault de la tienda'
 
+@description('Importe mensual del presupuesto, en la moneda de la suscripcion. Sale de deploy.secrets.ps1.')
+param presupuestoMensual int
+
+@description('Primer dia del mes en curso: ahi empieza el presupuesto.')
+param inicioPresupuesto string = utcNow('yyyy-MM-01')
+
 // ----- Nombres -----
 var sufijo = uniqueString(resourceGroup().id)
 var planName = 'plan-tienda-${entorno}'
@@ -39,6 +48,7 @@ var contenedorFotos = 'fotos'
 var sqlServerName = 'sql-tienda-${sufijo}'
 var sqlDbName = 'pedidos'
 var keyVaultName = 'kv-tienda-${take(sufijo, 13)}'
+var presupuestoName = 'presupuesto-tienda'
 
 // ----- Roles (identificadores fijos de Azure) -----
 var storageBlobDataContributorRoleId = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
@@ -52,7 +62,7 @@ var etiquetas = {
   'centro-de-coste': 'curso-arquitectura-cloud'
 }
 
-// ----- Modulo 3: la base de datos de pedidos -----
+// ----- Modulo 3: la base de datos del catalogo y los pedidos -----
 resource sqlServer 'Microsoft.Sql/servers@2023-08-01-preview' = {
   name: sqlServerName
   location: location
@@ -95,6 +105,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
     name: 'Standard_LRS'
   }
   properties: {
+    accessTier: 'Hot'
     allowBlobPublicAccess: false
     minimumTlsVersion: 'TLS1_2'
   }
@@ -110,6 +121,35 @@ resource fotos 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-0
   name: contenedorFotos
   properties: {
     publicAccess: 'None'
+  }
+}
+
+// Las fotos que nadie cambia se enfrian solas: a Cool a los 30 dias y a Cold a los 90.
+resource cicloDeVida 'Microsoft.Storage/storageAccounts/managementPolicies@2023-05-01' = {
+  parent: storageAccount
+  name: 'default'
+  properties: {
+    policy: {
+      rules: [
+        {
+          enabled: true
+          name: 'enfriar-fotos'
+          type: 'Lifecycle'
+          definition: {
+            filters: {
+              blobTypes: [ 'blockBlob' ]
+              prefixMatch: [ '${contenedorFotos}/' ]
+            }
+            actions: {
+              baseBlob: {
+                tierToCool: { daysAfterModificationGreaterThan: 30 }
+                tierToCold: { daysAfterModificationGreaterThan: 90 }
+              }
+            }
+          }
+        }
+      ]
+    }
   }
 }
 
@@ -171,6 +211,8 @@ resource app 'Microsoft.Web/sites@2023-12-01' = {
         { name: 'Tienda__KeyVaultUri', value: keyVault.properties.vaultUri }
         { name: 'Tienda__BlobUri', value: storageAccount.properties.primaryEndpoints.blob }
         { name: 'Tienda__Contenedor', value: contenedorFotos }
+        // La base sigue con usuario y contrasena: darle acceso a la identidad pide
+        // una orden dentro de la base que el Bicep no puede declarar (modulo 6).
         { name: 'ConnectionStrings__Pedidos', value: 'Server=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Database=${sqlDbName};User ID=${sqlAdminLogin};Password=${sqlAdminPassword};Encrypt=true;TrustServerCertificate=false;' }
       ]
     }
@@ -182,7 +224,7 @@ resource app 'Microsoft.Web/sites@2023-12-01' = {
   ]
 }
 
-// ----- Modulo 4: la web entra con su identidad, sin contrasena -----
+// ----- Modulo 4: la web entra con su identidad, sin clave -----
 resource storageRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(storageAccount.id, app.id, storageBlobDataContributorRoleId)
   scope: storageAccount
@@ -203,7 +245,46 @@ resource keyVaultRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04
   }
 }
 
+// ----- Modulo 5: el presupuesto del grupo -----
+// Avisa al responsable cuando el gasto previsto del mes pasa del 50, el 90 y el
+// 100 % del importe. Avisa y no corta nada: la tienda sigue funcionando.
+resource presupuesto 'Microsoft.Consumption/budgets@2024-08-01' = {
+  name: presupuestoName
+  properties: {
+    category: 'Cost'
+    amount: presupuestoMensual
+    timeGrain: 'Monthly'
+    timePeriod: {
+      startDate: inicioPresupuesto
+    }
+    notifications: {
+      'previsto-50': {
+        enabled: true
+        operator: 'GreaterThan'
+        threshold: 50
+        thresholdType: 'Forecasted'
+        contactEmails: [ responsable ]
+      }
+      'previsto-90': {
+        enabled: true
+        operator: 'GreaterThan'
+        threshold: 90
+        thresholdType: 'Forecasted'
+        contactEmails: [ responsable ]
+      }
+      'previsto-100': {
+        enabled: true
+        operator: 'GreaterThan'
+        threshold: 100
+        thresholdType: 'Forecasted'
+        contactEmails: [ responsable ]
+      }
+    }
+  }
+}
+
 output appName string = app.name
 output appUrl string = 'https://${app.properties.defaultHostName}'
 output keyVaultName string = keyVault.name
 output storageAccountName string = storageAccount.name
+output presupuestoName string = presupuesto.name
