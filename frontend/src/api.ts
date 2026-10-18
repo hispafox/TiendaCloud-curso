@@ -17,6 +17,14 @@ export async function ultimosPedidos(): Promise<PedidoVista[]> {
   return leer<PedidoVista[]>(await fetch('/api/pedidos'))
 }
 
+// El mensaje que la web lee del Key Vault con su identidad. Si no puede, no hay mensaje.
+export async function leerMensaje(): Promise<string | null> {
+  const respuesta = await fetch('/api/mensaje')
+  if (!respuesta.ok) return null
+  const cuerpo = (await respuesta.json()) as { mensaje?: string }
+  return cuerpo.mensaje ?? null
+}
+
 // /salud responde 200 si todo va bien y 503 si algo falla, y las filas vienen en los dos casos.
 export async function leerEstado(): Promise<ResultadoComprobacion[]> {
   const respuesta = await fetch('/salud')

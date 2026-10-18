@@ -4,16 +4,17 @@
 # Ejecuta desde la RAIZ del repositorio:
 #     pwsh -ExecutionPolicy Bypass -File .\azure\desplegar.ps1
 #
-# Cada rama del curso monta un paso mas. En esta (modulo 3), el grupo de
+# Cada rama del curso monta un paso mas. En esta (modulo 4), el grupo de
 # recursos, la web en App Service con la API .NET y el front React, la base
-# de datos SQL y el almacenamiento de las fotos.
+# de datos SQL, el almacenamiento de las fotos y el Key Vault, con la identidad
+# de la web y sus dos permisos.
 #
 # REQUISITOS:
 #   1. Azure CLI (az).        Comprobar: az version
 #   2. SDK de .NET 10.        Comprobar: dotnet --version
 #   3. Node.js con npm.       Comprobar: node --version
 #   4. azure\deploy.secrets.ps1, copia de deploy.secrets.example.ps1 con tus valores.
-#   5. Permisos para crear recursos en la suscripcion.
+#   5. Permisos para crear recursos y asignar roles en la suscripcion.
 #
 # No pide nada por pantalla: todo sale de deploy.secrets.ps1.
 #
@@ -104,8 +105,9 @@ az webapp deploy -g $GrupoRecursos -n $appName --src-path $zip --type zip | Out-
 Assert-Ok "az webapp deploy"
 
 # ===== 5. Comprobar que la tienda responde =====
-# La web recien publicada tarda un poco en arrancar, y la primera vez crea las
-# tablas de la base: se reintenta.
+# La web recien publicada tarda un poco en arrancar, la primera vez crea las
+# tablas de la base, y los permisos de la identidad pueden tardar unos minutos
+# en aplicarse: se reintenta.
 Write-Host "==> [5/5] Comprobando $appUrl/salud" -ForegroundColor Cyan
 $correcto = $false
 for ($i = 1; $i -le 10 -and -not $correcto; $i++) {

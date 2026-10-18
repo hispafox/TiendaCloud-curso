@@ -1,3 +1,4 @@
+using Azure.Identity;
 using Azure.Storage.Blobs;
 using Microsoft.EntityFrameworkCore;
 using Tienda.Api;
@@ -6,7 +7,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 var opciones = builder.Configuration.GetSection("Tienda").Get<OpcionesTienda>() ?? new OpcionesTienda();
 var cadenaPedidos = builder.Configuration.GetConnectionString("Pedidos");
-var cadenaFotos = builder.Configuration.GetConnectionString("Fotos");
 
 // Modulo 3: con su cadena de conexion, el catalogo va a Azure SQL Database.
 // Sin ella (en local), sigue en memoria, como en el modulo 2.
@@ -23,14 +23,24 @@ else
     builder.Services.AddSingleton<ICatalogo, CatalogoEnMemoria>();
 }
 
-// Modulo 3: las fotos, en Blob Storage. Sin cadena (en local), salen de la propia web.
-if (!string.IsNullOrWhiteSpace(cadenaFotos))
-    builder.Services.AddSingleton<IAlmacenFotos>(new AlmacenFotosBlob(new BlobContainerClient(cadenaFotos, opciones.Contenedor)));
+// Modulos 3 y 4: las fotos, en Blob Storage, y la web entra con su identidad:
+// DefaultAzureCredential, sin clave en la configuracion. Sin direccion (en local),
+// salen de la propia web.
+if (!string.IsNullOrWhiteSpace(opciones.BlobUri))
+{
+    var servicio = new BlobServiceClient(new Uri(opciones.BlobUri), new DefaultAzureCredential());
+    builder.Services.AddSingleton<IAlmacenFotos>(new AlmacenFotosBlob(servicio.GetBlobContainerClient(opciones.Contenedor)));
+}
 else
+{
     builder.Services.AddSingleton<IAlmacenFotos, AlmacenFotosLocal>();
+}
 
+var keyVault = new ComprobacionKeyVault(opciones);
+builder.Services.AddSingleton(keyVault);
 builder.Services.AddSingleton<IComprobacion>(sp => new ComprobacionBaseDatos(cadenaPedidos, sp.GetRequiredService<IServiceScopeFactory>()));
-builder.Services.AddSingleton<IComprobacion>(new ComprobacionAlmacenamiento(cadenaFotos, opciones.Contenedor));
+builder.Services.AddSingleton<IComprobacion>(new ComprobacionAlmacenamiento(opciones));
+builder.Services.AddSingleton<IComprobacion>(keyVault);
 
 var app = builder.Build();
 
@@ -74,6 +84,15 @@ app.MapPost("/api/pedidos", async (PeticionPedido peticion, ICatalogo catalogo, 
         EstadoPedido.ProductoNoExiste => Results.NotFound(new { error = "Ese producto no existe." }),
         _ => Results.Conflict(new { error = "No quedan existencias suficientes." }),
     };
+});
+
+// Modulo 4: el mensaje del Key Vault, leido con la identidad de la web.
+app.MapGet("/api/mensaje", async (ComprobacionKeyVault kv, CancellationToken ct) =>
+{
+    var resultado = await EjecutorComprobaciones.EjecutarSeguroAsync(kv, ct);
+    return resultado.Correcta
+        ? Results.Ok(new { mensaje = resultado.Detalle })
+        : Results.Json(new { error = resultado.Detalle }, statusCode: StatusCodes.Status503ServiceUnavailable);
 });
 
 // La que mira desplegar.ps1 al terminar: 200 si todo va bien, 503 si algo falla.
