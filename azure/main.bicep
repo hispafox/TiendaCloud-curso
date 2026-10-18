@@ -90,12 +90,22 @@ resource sqlDatabase 'Microsoft.Sql/servers/databases@2023-08-01-preview' = {
   location: location
   tags: etiquetas
   sku: {
-    name: 'Basic'
-    tier: 'Basic'
+    name: 'GP_S_Gen5'
+    tier: 'GeneralPurpose'
+    family: 'Gen5'
+    capacity: 2
+  }
+  properties: {
+    // Oferta gratuita de Azure SQL Database: cada mes trae su cupo de computo y
+    // 32 GB. Si se acaba, la base se pausa hasta el mes siguiente y no cobra.
+    useFreeLimit: true
+    freeLimitExhaustionBehavior: 'AutoPause'
   }
 }
 
 // ----- Modulo 3: el almacenamiento de las fotos -----
+// No tiene plan gratuito: se paga por lo que se guarda y por las operaciones.
+// Redundancia local, la mas barata, y seis fotos pequenas.
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageName
   location: location
@@ -154,6 +164,7 @@ resource cicloDeVida 'Microsoft.Storage/storageAccounts/managementPolicies@2023-
 }
 
 // ----- Modulo 4: el Key Vault, con un unico secreto inofensivo -----
+// Nivel standard, el mas barato: se paga por operacion, y la web solo lee un secreto.
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: keyVaultName
   location: location
@@ -179,13 +190,15 @@ resource secretoMensaje 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
 }
 
 // ----- Modulo 2: el plan y la web -----
+// Plan gratuito (F1): no se paga. A cambio, 60 minutos de CPU al dia, sin
+// Always On y sin deployment slots: basta para una clase.
 resource plan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: planName
   location: location
   tags: etiquetas
   kind: 'linux'
   sku: {
-    name: 'B1'
+    name: 'F1'
   }
   properties: {
     reserved: true

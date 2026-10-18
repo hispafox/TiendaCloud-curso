@@ -12,7 +12,9 @@ var cadenaPedidos = builder.Configuration.GetConnectionString("Pedidos");
 // Sin ella (en local), sigue en memoria, como en el modulo 2.
 if (!string.IsNullOrWhiteSpace(cadenaPedidos))
 {
-    builder.Services.AddDbContext<TiendaDb>(o => o.UseSqlServer(cadenaPedidos));
+    // La base gratuita se pausa sola cuando nadie la usa, y mientras se despierta
+    // rechaza las conexiones: EnableRetryOnFailure las reintenta.
+    builder.Services.AddDbContext<TiendaDb>(o => o.UseSqlServer(cadenaPedidos, sql => sql.EnableRetryOnFailure()));
     builder.Services.AddSingleton<PreparadorBase>();
     builder.Services.AddScoped<ICatalogo, CatalogoSql>();
 }

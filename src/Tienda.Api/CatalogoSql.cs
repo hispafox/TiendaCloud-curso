@@ -75,26 +75,33 @@ public sealed class CatalogoSql(TiendaDb db, PreparadorBase preparador) : ICatal
 
     // Restar las existencias y guardar el pedido van juntos, en una transaccion:
     // o pasan las dos cosas o ninguna. Es lo que obliga a llevar los pedidos a una relacional.
+    // La transaccion va entera dentro de la estrategia de reintentos de EF Core: si la
+    // conexion falla a mitad, porque la base estaba en pausa, se repite desde el principio.
     public async Task<ResultadoPedido> PedirAsync(int productoId, int cantidad, CancellationToken ct)
     {
         await preparador.PrepararAsync(db, ct);
-        await using var transaccion = await db.Database.BeginTransactionAsync(ct);
-
-        var restadas = await db.Productos
-            .Where(p => p.Id == productoId && p.Existencias >= cantidad)
-            .ExecuteUpdateAsync(s => s.SetProperty(p => p.Existencias, p => p.Existencias - cantidad), ct);
-        if (restadas == 0)
+        var estrategia = db.Database.CreateExecutionStrategy();
+        return await estrategia.ExecuteAsync(async () =>
         {
-            var existe = await db.Productos.AnyAsync(p => p.Id == productoId, ct);
-            return new ResultadoPedido(existe ? EstadoPedido.SinExistencias : EstadoPedido.ProductoNoExiste);
-        }
+            db.ChangeTracker.Clear();
+            await using var transaccion = await db.Database.BeginTransactionAsync(ct);
 
-        var pedido = new Pedido { ProductoId = productoId, Cantidad = cantidad, Fecha = DateTime.UtcNow };
-        db.Pedidos.Add(pedido);
-        await db.SaveChangesAsync(ct);
-        await transaccion.CommitAsync(ct);
+            var restadas = await db.Productos
+                .Where(p => p.Id == productoId && p.Existencias >= cantidad)
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.Existencias, p => p.Existencias - cantidad), ct);
+            if (restadas == 0)
+            {
+                var existe = await db.Productos.AnyAsync(p => p.Id == productoId, ct);
+                return new ResultadoPedido(existe ? EstadoPedido.SinExistencias : EstadoPedido.ProductoNoExiste);
+            }
 
-        var nombre = await db.Productos.Where(p => p.Id == productoId).Select(p => p.Nombre).SingleAsync(ct);
-        return new ResultadoPedido(EstadoPedido.Hecho, new PedidoVista(pedido.Id, nombre, pedido.Cantidad, pedido.Fecha));
+            var pedido = new Pedido { ProductoId = productoId, Cantidad = cantidad, Fecha = DateTime.UtcNow };
+            db.Pedidos.Add(pedido);
+            await db.SaveChangesAsync(ct);
+            await transaccion.CommitAsync(ct);
+
+            var nombre = await db.Productos.Where(p => p.Id == productoId).Select(p => p.Nombre).SingleAsync(ct);
+            return new ResultadoPedido(EstadoPedido.Hecho, new PedidoVista(pedido.Id, nombre, pedido.Cantidad, pedido.Fecha));
+        });
     }
 }

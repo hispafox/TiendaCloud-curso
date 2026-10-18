@@ -74,6 +74,10 @@ npm run dev
 
 En local, sin Azure, la API usa el catálogo en memoria y las fotos que lleva dentro, y el panel de estado dice qué falta por configurar. Los tests: `dotnet test` en la raíz y `npm test` en `frontend`.
 
+## Lo que cuesta
+
+El plan de App Service es el gratuito (F1) y la base usa la oferta gratuita de Azure SQL Database, que se pausa sola cuando nadie la usa. El almacenamiento y el Key Vault no tienen plan gratuito: se pagan por uso, en su nivel más barato, y con lo que mueve la tienda el uso es mínimo. Aun así, bórrala con `borrar.ps1` al acabar cada sesión.
+
 ## Borrarla
 
 ```powershell
