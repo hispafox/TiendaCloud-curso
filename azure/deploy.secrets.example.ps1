@@ -20,3 +20,8 @@ $Responsable = "tu.nombre@tuempresa.com"
 # Contrasena del administrador de SQL (modulo 3): 8 caracteres o mas, con
 # mayuscula, minuscula, numero y simbolo.
 $SqlPassword = "CambiaEsto-2026!"
+
+# Importe mensual del presupuesto del grupo (modulo 5), en la moneda de tu
+# suscripcion: la cifra de tu estimacion del mes con la calculadora de Azure.
+# Los avisos llegan a $Responsable al 50, 90 y 100 % del gasto previsto.
+$PresupuestoMensual = 50

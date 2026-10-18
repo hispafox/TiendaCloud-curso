@@ -8,6 +8,8 @@
 //             para las fotos, con su ciclo de vida
 //   modulo 4  identidad de la web y Key Vault con un unico secreto (un mensaje);
 //             la web entra al almacenamiento y al Key Vault sin clave
+//   modulo 5  el presupuesto del grupo, con avisos al responsable; y todo
+//             descrito en este fichero: se crea y se borra con una orden
 //
 // Lo despliega azure/desplegar.ps1. Lo borra azure/borrar.ps1.
 // =============================================================================
@@ -31,6 +33,12 @@ param sqlAdminPassword string
 @description('El mensaje que se guarda en el Key Vault y que la web ensena.')
 param mensaje string = 'Hola desde el Key Vault de la tienda'
 
+@description('Importe mensual del presupuesto, en la moneda de la suscripcion. Sale de deploy.secrets.ps1.')
+param presupuestoMensual int
+
+@description('Primer dia del mes en curso: ahi empieza el presupuesto.')
+param inicioPresupuesto string = utcNow('yyyy-MM-01')
+
 // ----- Nombres -----
 var sufijo = uniqueString(resourceGroup().id)
 var planName = 'plan-tienda-${entorno}'
@@ -40,6 +48,7 @@ var contenedorFotos = 'fotos'
 var sqlServerName = 'sql-tienda-${sufijo}'
 var sqlDbName = 'pedidos'
 var keyVaultName = 'kv-tienda-${take(sufijo, 13)}'
+var presupuestoName = 'presupuesto-tienda'
 
 // ----- Roles (identificadores fijos de Azure) -----
 var storageBlobDataContributorRoleId = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
@@ -236,7 +245,46 @@ resource keyVaultRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04
   }
 }
 
+// ----- Modulo 5: el presupuesto del grupo -----
+// Avisa al responsable cuando el gasto previsto del mes pasa del 50, el 90 y el
+// 100 % del importe. Avisa y no corta nada: la tienda sigue funcionando.
+resource presupuesto 'Microsoft.Consumption/budgets@2024-08-01' = {
+  name: presupuestoName
+  properties: {
+    category: 'Cost'
+    amount: presupuestoMensual
+    timeGrain: 'Monthly'
+    timePeriod: {
+      startDate: inicioPresupuesto
+    }
+    notifications: {
+      'previsto-50': {
+        enabled: true
+        operator: 'GreaterThan'
+        threshold: 50
+        thresholdType: 'Forecasted'
+        contactEmails: [ responsable ]
+      }
+      'previsto-90': {
+        enabled: true
+        operator: 'GreaterThan'
+        threshold: 90
+        thresholdType: 'Forecasted'
+        contactEmails: [ responsable ]
+      }
+      'previsto-100': {
+        enabled: true
+        operator: 'GreaterThan'
+        threshold: 100
+        thresholdType: 'Forecasted'
+        contactEmails: [ responsable ]
+      }
+    }
+  }
+}
+
 output appName string = app.name
 output appUrl string = 'https://${app.properties.defaultHostName}'
 output keyVaultName string = keyVault.name
 output storageAccountName string = storageAccount.name
+output presupuestoName string = presupuesto.name
