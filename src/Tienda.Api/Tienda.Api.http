@@ -1,0 +1,19 @@
+@api = https://localhost:5001
+
+### El catalogo
+GET {{api}}/api/productos
+
+### Los ultimos pedidos
+GET {{api}}/api/pedidos
+
+### Pedir dos unidades del producto 1
+POST {{api}}/api/pedidos
+Content-Type: application/json
+
+{ "productoId": 1, "cantidad": 2 }
+
+### Pedir mas de lo que queda: 409
+POST {{api}}/api/pedidos
+Content-Type: application/json
+
+{ "productoId": 3, "cantidad": 1000 }
