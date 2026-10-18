@@ -1,4 +1,4 @@
-import type { PedidoVista, Producto } from './tipos.ts'
+import type { PedidoVista, Producto, ResultadoComprobacion } from './tipos.ts'
 
 // Si la API responde con error, su mensaje llega a la pagina tal cual.
 async function leer<T>(respuesta: Response): Promise<T> {
@@ -15,6 +15,13 @@ export async function listarProductos(): Promise<Producto[]> {
 
 export async function ultimosPedidos(): Promise<PedidoVista[]> {
   return leer<PedidoVista[]>(await fetch('/api/pedidos'))
+}
+
+// /salud responde 200 si todo va bien y 503 si algo falla, y las filas vienen en los dos casos.
+export async function leerEstado(): Promise<ResultadoComprobacion[]> {
+  const respuesta = await fetch('/salud')
+  const cuerpo: unknown = await respuesta.json()
+  return Array.isArray(cuerpo) ? (cuerpo as ResultadoComprobacion[]) : []
 }
 
 export async function pedir(productoId: number, cantidad = 1): Promise<PedidoVista> {

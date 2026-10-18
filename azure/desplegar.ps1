@@ -4,8 +4,9 @@
 # Ejecuta desde la RAIZ del repositorio:
 #     pwsh -ExecutionPolicy Bypass -File .\azure\desplegar.ps1
 #
-# Cada rama del curso monta un paso mas. En esta (modulo 2), el grupo de
-# recursos y la web en App Service, con la API .NET y el front React.
+# Cada rama del curso monta un paso mas. En esta (modulo 3), el grupo de
+# recursos, la web en App Service con la API .NET y el front React, la base
+# de datos SQL y el almacenamiento de las fotos.
 #
 # REQUISITOS:
 #   1. Azure CLI (az).        Comprobar: az version
@@ -41,7 +42,7 @@ if (-not (Test-Path $secretsFile)) {
     throw "Falta azure\deploy.secrets.ps1. Copia deploy.secrets.example.ps1 con ese nombre y rellenalo."
 }
 . $secretsFile
-foreach ($v in "Suscripcion", "Ubicacion", "GrupoRecursos", "Responsable") {
+foreach ($v in "Suscripcion", "Ubicacion", "GrupoRecursos", "Responsable", "SqlPassword") {
     if (-not (Get-Variable $v -ValueOnly -ErrorAction SilentlyContinue)) { throw "deploy.secrets.ps1 no define `$$v." }
 }
 Write-Host "    Valores cargados de deploy.secrets.ps1" -ForegroundColor Green
@@ -76,7 +77,7 @@ Assert-Ok "az group create"
 # ===== 3. Infraestructura (Bicep) =====
 Write-Host "==> [3/5] Desplegando la infraestructura (unos minutos)..." -ForegroundColor Cyan
 $json = az deployment group create -g $GrupoRecursos -f $bicep `
-    -p "responsable=$Responsable" `
+    -p "responsable=$Responsable" "sqlAdminPassword=$SqlPassword" `
     --query "properties.outputs" -o json
 Assert-Ok "az deployment group create"
 $outputs = $json | ConvertFrom-Json
@@ -103,12 +104,13 @@ az webapp deploy -g $GrupoRecursos -n $appName --src-path $zip --type zip | Out-
 Assert-Ok "az webapp deploy"
 
 # ===== 5. Comprobar que la tienda responde =====
-# La web recien publicada tarda un poco en arrancar: se reintenta.
-Write-Host "==> [5/5] Comprobando $appUrl/api/productos" -ForegroundColor Cyan
+# La web recien publicada tarda un poco en arrancar, y la primera vez crea las
+# tablas de la base: se reintenta.
+Write-Host "==> [5/5] Comprobando $appUrl/salud" -ForegroundColor Cyan
 $correcto = $false
 for ($i = 1; $i -le 10 -and -not $correcto; $i++) {
     try {
-        $r = Invoke-WebRequest -Uri "$appUrl/api/productos" -UseBasicParsing -TimeoutSec 60
+        $r = Invoke-WebRequest -Uri "$appUrl/salud" -UseBasicParsing -TimeoutSec 60
         $correcto = $r.StatusCode -eq 200
     } catch {
         Write-Host "    Intento $i de 10: aun no. Espero 30 segundos..." -ForegroundColor Yellow
@@ -120,7 +122,7 @@ Write-Host "`n=============================================" -ForegroundColor Gr
 if ($correcto) {
     Write-Host " LISTO. La tienda esta en marcha." -ForegroundColor Green
 } else {
-    Write-Host " Desplegado, pero la API aun no responde. Abre la URL en unos minutos." -ForegroundColor Yellow
+    Write-Host " Desplegado, pero /salud aun no responde bien. Abre la URL y mira que pieza falla." -ForegroundColor Yellow
 }
 Write-Host " URL:     $appUrl" -ForegroundColor Green
 Write-Host " Borrar:  .\azure\borrar.ps1" -ForegroundColor Green
