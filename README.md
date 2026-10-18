@@ -2,7 +2,7 @@
 
 La tienda online del curso de arquitectura cloud, montada en **Azure** paso a paso. Cada módulo del curso sube una parte más de la tienda, y cada parte tiene su rama en este repositorio.
 
-> **Estás en `modulo-1/grupo-de-recursos`.** Todavía no hay aplicación: solo el sitio donde irá la tienda, un grupo de recursos con sus etiquetas, y los dos scripts que la montan y la borran.
+> **Estás en `modulo-2/app-service`.** La tienda ya funciona: una API .NET y un front React publicados en App Service. El catálogo vive todavía en la memoria de la web, y se pierde al reiniciarla.
 
 ## Las ramas del curso
 
@@ -23,15 +23,21 @@ Cada rama añade un paso a la anterior. Para ver una, `git checkout <rama>`; par
 
 | Carpeta | Qué es |
 |---|---|
-| `azure/desplegar.ps1` | Crea el grupo de recursos con sus cuatro etiquetas |
+| `azure/main.bicep` | La infraestructura: el plan de App Service y la web, con sus etiquetas |
+| `azure/desplegar.ps1` | Crea el grupo, despliega el Bicep, compila el front, publica la API con el front dentro y comprueba que responde |
 | `azure/borrar.ps1` | Borra el grupo de recursos entero |
 | `azure/deploy.secrets.example.ps1` | La plantilla de valores: suscripción, región, grupo y responsable |
-| `docs/modulo-1.md` | Qué hace esta rama, cómo se lanza y cómo se comprueba |
+| `src/Tienda.Api` | La API .NET 10: catálogo y pedidos. En Azure sirve también el front |
+| `frontend` | El front: React, Vite y TypeScript |
+| `tests/Tienda.Api.Tests` | Los tests de la API (xUnit) |
+| `docs/` | Un fichero por módulo: qué hace cada rama y cómo se comprueba |
 
 ## Lo que necesitas
 
 - La CLI de Azure (`az version`).
-- Permisos para crear grupos de recursos en una suscripción de pruebas.
+- El SDK de .NET 10 (`dotnet --version`).
+- Node.js con npm (`node --version`).
+- Permisos para crear recursos en una suscripción de pruebas.
 
 ## Montarla
 
@@ -41,6 +47,24 @@ Cada rama añade un paso a la anterior. Para ver una, `git checkout <rama>`; par
 ```powershell
 pwsh -ExecutionPolicy Bypass -File .\azure\desplegar.ps1
 ```
+
+Al terminar escribe la URL de la tienda.
+
+## Probarla en local
+
+La API en `https://localhost:5001` (certificado de desarrollo de .NET) y el front en `http://localhost:5173`, que pasa `/api` a la API:
+
+```powershell
+dotnet run --project src/Tienda.Api
+```
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Los tests: `dotnet test` en la raíz y `npm test` en `frontend`.
 
 ## Borrarla
 

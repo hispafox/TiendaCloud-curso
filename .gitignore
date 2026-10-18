@@ -1,5 +1,13 @@
+bin/
+obj/
 .vs/
 *.user
+publicar/
+*.zip
+
+# El front: dependencias y compilado.
+node_modules/
+dist/
 
 # Los secretos reales no se suben nunca: solo la plantilla.
 azure/deploy.secrets.ps1
