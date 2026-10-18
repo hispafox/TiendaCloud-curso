@@ -4,10 +4,10 @@
 # Ejecuta desde la RAIZ del repositorio:
 #     pwsh -ExecutionPolicy Bypass -File .\azure\desplegar.ps1
 #
-# Cada rama del curso monta un paso mas. En esta (modulo 4), el grupo de
+# Cada rama del curso monta un paso mas. En esta (modulo 5), el grupo de
 # recursos, la web en App Service con la API .NET y el front React, la base
-# de datos SQL, el almacenamiento de las fotos y el Key Vault, con la identidad
-# de la web y sus dos permisos.
+# de datos SQL, el almacenamiento de las fotos, el Key Vault con la identidad
+# de la web y sus dos permisos, y el presupuesto del grupo.
 #
 # REQUISITOS:
 #   1. Azure CLI (az).        Comprobar: az version
@@ -43,7 +43,7 @@ if (-not (Test-Path $secretsFile)) {
     throw "Falta azure\deploy.secrets.ps1. Copia deploy.secrets.example.ps1 con ese nombre y rellenalo."
 }
 . $secretsFile
-foreach ($v in "Suscripcion", "Ubicacion", "GrupoRecursos", "Responsable", "SqlPassword") {
+foreach ($v in "Suscripcion", "Ubicacion", "GrupoRecursos", "Responsable", "SqlPassword", "PresupuestoMensual") {
     if (-not (Get-Variable $v -ValueOnly -ErrorAction SilentlyContinue)) { throw "deploy.secrets.ps1 no define `$$v." }
 }
 Write-Host "    Valores cargados de deploy.secrets.ps1" -ForegroundColor Green
@@ -78,7 +78,7 @@ Assert-Ok "az group create"
 # ===== 3. Infraestructura (Bicep) =====
 Write-Host "==> [3/5] Desplegando la infraestructura (unos minutos)..." -ForegroundColor Cyan
 $json = az deployment group create -g $GrupoRecursos -f $bicep `
-    -p "responsable=$Responsable" "sqlAdminPassword=$SqlPassword" `
+    -p "responsable=$Responsable" "sqlAdminPassword=$SqlPassword" "presupuestoMensual=$PresupuestoMensual" `
     --query "properties.outputs" -o json
 Assert-Ok "az deployment group create"
 $outputs = $json | ConvertFrom-Json
