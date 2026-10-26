@@ -33,6 +33,8 @@ if (-not (Test-Path $secretsFile)) {
 foreach ($v in "Suscripcion", "Ubicacion", "GrupoRecursos", "Responsable", "SqlPassword", "PresupuestoMensual") {
     if (-not (Get-Variable $v -ValueOnly -ErrorAction SilentlyContinue)) { throw "deploy.secrets.ps1 no define `$$v." }
 }
+# Opcional: la region de la base, si no es la del resto (modulo 3).
+if (-not (Get-Variable UbicacionSql -ValueOnly -ErrorAction SilentlyContinue)) { $UbicacionSql = $Ubicacion }
 
 $bicep = Join-Path $PSScriptRoot "main.bicep"
 
@@ -62,7 +64,7 @@ if ($existe -ne "true") {
 # ===== 3. El what-if =====
 Write-Host "==> [3/3] Lo que cambiaria el despliegue (what-if)" -ForegroundColor Cyan
 az deployment group what-if -g $GrupoRecursos -f $bicep `
-    -p "responsable=$Responsable" "sqlAdminPassword=$SqlPassword" "presupuestoMensual=$PresupuestoMensual"
+    -p "responsable=$Responsable" "sqlAdminPassword=$SqlPassword" "presupuestoMensual=$PresupuestoMensual" "ubicacionSql=$UbicacionSql"
 Assert-Ok "az deployment group what-if"
 
 Write-Host "`n=============================================" -ForegroundColor Green
