@@ -51,9 +51,11 @@ Assert-Ok "az webapp identity show"
 if (-not $identidad) { throw "La web $app no tiene identidad. Monta antes la tienda con .\azure\desplegar.ps1." }
 
 # ===== 2. Quitar el permiso =====
-$cuantas = az role assignment list --assignee $identidad --role $rol --scope $keyVault --query "length(@)" -o tsv
+# La consulta va sin parentesis: az es un .cmd, y cmd.exe los toma como un
+# bloque y aborta con "No se esperaba -o en este momento".
+$asignaciones = az role assignment list --assignee $identidad --role $rol --scope $keyVault --query "[].id" -o tsv
 Assert-Ok "az role assignment list"
-if ($cuantas -eq "0") {
+if (-not $asignaciones) {
     Write-Host "`nLa web ya no tiene el rol $rol sobre el Key Vault. Para devolverlo: .\azure\desplegar.ps1" -ForegroundColor Yellow
     exit 0
 }
