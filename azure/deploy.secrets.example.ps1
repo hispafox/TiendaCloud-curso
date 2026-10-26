@@ -20,3 +20,8 @@ $Responsable = "tu.nombre@tuempresa.com"
 # Contrasena del administrador de SQL (modulo 3): 8 caracteres o mas, con
 # mayuscula, minuscula, numero y simbolo.
 $SqlPassword = "CambiaEsto-2026!"
+
+# Opcional (modulo 3). Todas las bases gratuitas de Azure SQL de una suscripcion
+# van en la misma region: si ya tienes alguna fuera de $Ubicacion, pon aqui la
+# suya y el servidor SQL y la base se crean ahi. Si no, dejalo comentado.
+# $UbicacionSql = "eastus"

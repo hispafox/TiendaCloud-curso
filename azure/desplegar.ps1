@@ -46,6 +46,8 @@ if (-not (Test-Path $secretsFile)) {
 foreach ($v in "Suscripcion", "Ubicacion", "GrupoRecursos", "Responsable", "SqlPassword") {
     if (-not (Get-Variable $v -ValueOnly -ErrorAction SilentlyContinue)) { throw "deploy.secrets.ps1 no define `$$v." }
 }
+# Opcional: la region de la base, si no es la del resto (modulo 3).
+if (-not (Get-Variable UbicacionSql -ValueOnly -ErrorAction SilentlyContinue)) { $UbicacionSql = $Ubicacion }
 Write-Host "    Valores cargados de deploy.secrets.ps1" -ForegroundColor Green
 
 # Las cuatro etiquetas de la tienda (modulo 5), tambien en el grupo.
@@ -78,7 +80,7 @@ Assert-Ok "az group create"
 # ===== 3. Infraestructura (Bicep) =====
 Write-Host "==> [3/5] Desplegando la infraestructura (unos minutos)..." -ForegroundColor Cyan
 $json = az deployment group create -g $GrupoRecursos -f $bicep `
-    -p "responsable=$Responsable" "sqlAdminPassword=$SqlPassword" `
+    -p "responsable=$Responsable" "sqlAdminPassword=$SqlPassword" "ubicacionSql=$UbicacionSql" `
     --query "properties.outputs" -o json
 Assert-Ok "az deployment group create"
 $outputs = $json | ConvertFrom-Json
