@@ -14,7 +14,7 @@ Dentro del mismo grupo, junto a la web del módulo 2:
 | Contenedor | `fotos` | Privado: la web sirve las fotos, nadie llega a ellas desde Internet |
 | Regla de ciclo de vida | `enfriar-fotos` | Las fotos que nadie cambia pasan a Cool a los 30 días y a Cold a los 90 |
 
-Lo que cuesta: la base es gratuita. Cada mes trae un cupo de cómputo y 32 GB, y si se acaba se pausa hasta el mes siguiente sin cobrar nada. La oferta admite hasta 10 bases gratuitas por suscripción, todas en la misma región, y no vale para la suscripción Azure for Students Starter. El almacenamiento no tiene plan gratuito: se paga por lo que se guarda y por las operaciones, y aquí son seis fotos pequeñas.
+Lo que cuesta: la base es gratuita. Cada mes trae un cupo de cómputo y 32 GB, y si se acaba se pausa hasta el mes siguiente sin cobrar nada. La oferta admite hasta 10 bases gratuitas por suscripción, todas en la misma región, y no vale para la suscripción Azure for Students Starter. Si tu suscripción ya tiene bases gratuitas en otra región, pon esa región en `$UbicacionSql` de `deploy.secrets.ps1`: el servidor SQL y la base se crean allí y el resto se queda donde estaba. Con la pausa automática, las copias de seguridad de la base son locales. El almacenamiento no tiene plan gratuito: se paga por lo que se guarda y por las operaciones, y aquí son seis fotos pequeñas.
 
 Y la web recibe en su configuración dos cadenas de conexión: la de la base, con usuario y contraseña, y la del almacenamiento, con la clave de la cuenta. Las dos las escribe el Bicep: nadie copia una dirección a mano.
 
@@ -29,10 +29,10 @@ Son las decisiones del módulo 3. Los pedidos van a una relacional porque tienen
 | `src/Tienda.Api/Fotos/*.jpg` | Las seis fotos de ejemplo, fotorrealistas, generadas con Gamma, dentro de la propia web |
 | `src/Tienda.Api/Comprobaciones.cs` | Las comprobaciones de la base y del almacenamiento, y `/salud` |
 | `frontend` | La foto en cada producto y el panel «Estado de la tienda», con una fila por pieza |
-| `tests/Tienda.Api.Tests` | 30 tests: se suman el catálogo en SQLite en memoria, las comprobaciones, `/salud` y las fotos |
+| `tests/Tienda.Api.Tests` | 33 tests: se suman el catálogo en SQLite en memoria, las comprobaciones, `/salud`, las fotos y las reglas de la base gratuita en el Bicep |
 | `azure/main.bicep` | Servidor y base de SQL, cuenta de almacenamiento, contenedor y ciclo de vida, y las dos cadenas en la web |
 | `azure/desplegar.ps1` | Exige `$SqlPassword` en `deploy.secrets.ps1` y, al final, espera a `/salud` |
-| `azure/deploy.secrets.example.ps1` | Suma `$SqlPassword` |
+| `azure/deploy.secrets.example.ps1` | Suma `$SqlPassword` y, opcional, `$UbicacionSql` |
 
 Si la web no tiene cadena de conexión, como pasa en local, sigue con el catálogo en memoria del módulo 2 y con las fotos que lleva dentro.
 
