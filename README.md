@@ -27,6 +27,7 @@ Cada rama añade un paso a la anterior. Para ver una, `git checkout <rama>`; par
 | `azure/borrar.ps1` | Borra el grupo de recursos entero |
 | `azure/deploy.secrets.example.ps1` | La plantilla de valores: suscripción, región, grupo y responsable |
 | `docs/modulo-1.md` | Qué hace esta rama, cómo se lanza y cómo se comprueba |
+| `docs/arquitectura.md` | Lo que hay montado en Azure en esta rama, con diagramas |
 
 ## Lo que necesitas
 
