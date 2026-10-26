@@ -32,6 +32,7 @@ Cada rama añade un paso a la anterior. Para ver una, `git checkout <rama>`; par
 | `frontend` | El front: React, Vite y TypeScript |
 | `tests/Tienda.Api.Tests` | Los tests de la API (xUnit) |
 | `docs/` | Un fichero por módulo: qué hace cada rama y cómo se comprueba |
+| `docs/arquitectura.md` | Lo que hay montado en Azure en esta rama, con diagramas |
 
 ## Lo que necesitas
 
