@@ -17,6 +17,9 @@
 @description('Region. La pone desplegar.ps1 desde deploy.secrets.ps1.')
 param location string = resourceGroup().location
 
+@description('Region del servidor SQL y su base. Todas las bases gratuitas de una suscripcion van en la misma region: si ya tienes alguna en otra, desplegar.ps1 la toma de $UbicacionSql.')
+param ubicacionSql string = location
+
 @description('Entorno: va en los nombres y en las etiquetas.')
 param entorno string = 'pruebas'
 
@@ -65,7 +68,7 @@ var etiquetas = {
 // ----- Modulo 3: la base de datos del catalogo y los pedidos -----
 resource sqlServer 'Microsoft.Sql/servers@2023-08-01-preview' = {
   name: sqlServerName
-  location: location
+  location: ubicacionSql
   tags: etiquetas
   properties: {
     administratorLogin: sqlAdminLogin
@@ -87,7 +90,7 @@ resource sqlFirewallAzure 'Microsoft.Sql/servers/firewallRules@2023-08-01-previe
 resource sqlDatabase 'Microsoft.Sql/servers/databases@2023-08-01-preview' = {
   parent: sqlServer
   name: sqlDbName
-  location: location
+  location: ubicacionSql
   tags: etiquetas
   sku: {
     name: 'GP_S_Gen5'
@@ -100,6 +103,9 @@ resource sqlDatabase 'Microsoft.Sql/servers/databases@2023-08-01-preview' = {
     // 32 GB. Si se acaba, la base se pausa hasta el mes siguiente y no cobra.
     useFreeLimit: true
     freeLimitExhaustionBehavior: 'AutoPause'
+    // Con AutoPause la oferta solo admite copias de seguridad con redundancia
+    // local: se pide aqui, que el Bicep no la pone solo.
+    requestedBackupStorageRedundancy: 'Local'
   }
 }
 
