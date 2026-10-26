@@ -59,4 +59,21 @@ public class InfraestructuraTests
             foreach (var nombre in ParametrosDe(script))
                 Assert.Matches($@"(?m)^param {nombre} ", Bicep);
     }
+
+    // En Windows az es un .cmd: PowerShell le pasa sin comillas los argumentos sin
+    // espacios, y cmd.exe interpreta ( ) & | < > ^ por su cuenta.
+    [Fact]
+    public void Los_scripts_no_pasan_a_az_caracteres_que_rompe_cmd()
+    {
+        var lineasAz = Directory.GetFiles(Azure, "*.ps1")
+            .SelectMany(s => File.ReadAllLines(s).Select((l, i) => (Linea: l, Donde: $"{Path.GetFileName(s)}:{i + 1}")))
+            .Where(x => Regex.IsMatch(x.Linea, @"^\s*(\$\w+\s*=\s*)?az\s|^\s*-p\s"));
+
+        var rotas = lineasAz
+            .SelectMany(x => Regex.Matches(x.Linea, @"""([^""\s]*)""").Select(m => (m.Groups[1].Value, x.Donde)))
+            .Where(a => Regex.IsMatch(a.Item1, @"[()&|<>^]") && !a.Item1.StartsWith("$("))
+            .Select(a => $"{a.Donde} \"{a.Item1}\"");
+
+        Assert.Empty(rotas);
+    }
 }
