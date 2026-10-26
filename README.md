@@ -33,6 +33,7 @@ Lo que hace cada rama, cómo se lanza, qué mirar en el Portal y cómo se compru
 | `frontend` | El front: React, Vite y TypeScript |
 | `tests/Tienda.Api.Tests` | Los tests de la API (xUnit) |
 | `docs/` | Un fichero por módulo y la lista de comprobación |
+| `docs/arquitectura.md` | Lo que hay montado en Azure en esta rama, con diagramas |
 
 ## Lo que necesitas
 
