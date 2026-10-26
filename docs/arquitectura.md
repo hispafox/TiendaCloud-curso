@@ -115,7 +115,7 @@ No hay red virtual, ni endpoints privados, ni borde con cortafuegos de aplicacio
 
 ## La versión de producción (no se despliega)
 
-Este diagrama no lo monta ningún script. Es la distancia entre la tienda del curso y una de verdad, sacada de `docs/lista-comprobacion.md`.
+Este diagrama no lo monta ningún script. Es la distancia entre la tienda del curso y una de verdad, sacada de `docs/lista-comprobacion.md`. El diseño de la red, con sus subredes, zonas DNS, reglas y lo que cuesta, está en `docs/red-virtual.md`.
 
 ```mermaid
 flowchart LR

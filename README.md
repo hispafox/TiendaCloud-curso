@@ -34,6 +34,7 @@ Lo que hace cada rama, cómo se lanza, qué mirar en el Portal y cómo se compru
 | `tests/Tienda.Api.Tests` | Los tests de la API (xUnit) |
 | `docs/` | Un fichero por módulo y la lista de comprobación |
 | `docs/arquitectura.md` | Lo que hay montado en Azure en esta rama, con diagramas |
+| `docs/red-virtual.md` | El diseño de la red privada de producción, sin desplegar: subredes, endpoints privados, DNS, reglas y lo que cuesta |
 
 ## Lo que necesitas
 
