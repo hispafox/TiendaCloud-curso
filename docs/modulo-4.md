@@ -23,7 +23,7 @@ Y en la configuración de la web, **la clave del almacenamiento desaparece**. En
 | `src/Tienda.Api/Program.cs` | Las fotos se leen con `DefaultAzureCredential`, que en Azure es la identidad de la web. Nuevo `/api/mensaje` |
 | `src/Tienda.Api/Comprobaciones.cs` | La comprobación del almacenamiento entra con la identidad, y llega la del Key Vault |
 | `frontend` | El mensaje del Key Vault, debajo del título. El panel de estado tiene una fila más |
-| `tests/Tienda.Api.Tests` | 35 tests: se suman el Key Vault sin configurar y `/api/mensaje` |
+| `tests/Tienda.Api.Tests` | 37 tests: se suman el Key Vault sin configurar y `/api/mensaje` |
 | `azure/main.bicep` | La identidad de la web, el Key Vault con su secreto y los dos permisos. Fuera `ConnectionStrings__Fotos` |
 | `azure/borrar.ps1` | Purga el Key Vault después de borrar el grupo. Si no, se queda unos días en la papelera con su nombre reservado y el siguiente despliegue choca con él |
 
