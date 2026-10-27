@@ -35,6 +35,10 @@ foreach ($v in "Suscripcion", "Ubicacion", "GrupoRecursos", "Responsable", "SqlP
 }
 # Opcional: la region de la base, si no es la del resto (modulo 3).
 if (-not (Get-Variable UbicacionSql -ValueOnly -ErrorAction SilentlyContinue)) { $UbicacionSql = $Ubicacion }
+# En Windows az es un .cmd, y cmd.exe corta la orden en estos simbolos.
+if ($SqlPassword -match '[&|<>^()%"]') {
+    throw "La contrasena de SQL lleva un simbolo que rompe la orden de az en Windows: & | < > ^ ( ) % o comillas. Cambiala en deploy.secrets.ps1; valen, por ejemplo, - _ . ! @ #"
+}
 
 $bicep = Join-Path $PSScriptRoot "main.bicep"
 

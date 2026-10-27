@@ -76,4 +76,37 @@ public class InfraestructuraTests
 
         Assert.Empty(rotas);
     }
+
+    // El patron con el que un script rechaza la contrasena de SQL antes de pasarla a az.
+    private static string PatronContrasena(string script)
+    {
+        var comprobacion = Regex.Match(File.ReadAllText(script), @"\$SqlPassword -match '([^']+)'");
+        Assert.True(comprobacion.Success, $"{Path.GetFileName(script)} no comprueba los simbolos de $SqlPassword");
+        return comprobacion.Groups[1].Value;
+    }
+
+    [Fact]
+    public void Los_scripts_que_pasan_la_contrasena_rechazan_lo_que_rompe_cmd()
+    {
+        var scripts = Directory.GetFiles(Azure, "*.ps1").Where(s => ParametrosDe(s).Contains("sqlAdminPassword")).ToList();
+
+        Assert.Contains(scripts, s => Path.GetFileName(s) == "desplegar.ps1");
+        foreach (var patron in scripts.Select(PatronContrasena))
+        {
+            foreach (var simbolo in new[] { "&", "|", "<", ">", "^", "(", ")", "%", "\"" })
+                Assert.Matches(patron, $"Abc1{simbolo}x9");
+            foreach (var simbolo in new[] { "-", "_", ".", "!", "@", "#" })
+                Assert.DoesNotMatch(patron, $"Abc1{simbolo}x9");
+        }
+    }
+
+    [Fact]
+    public void La_contrasena_de_la_plantilla_pasa_la_comprobacion()
+    {
+        var plantilla = File.ReadAllText(Path.Combine(Azure, "deploy.secrets.example.ps1"));
+        var contrasena = Regex.Match(plantilla, @"(?m)^\$SqlPassword = ""([^""]*)""").Groups[1].Value;
+
+        Assert.NotEmpty(contrasena);
+        Assert.DoesNotMatch(PatronContrasena(Path.Combine(Azure, "desplegar.ps1")), contrasena);
+    }
 }
