@@ -29,7 +29,7 @@ Son las decisiones del módulo 3. Los pedidos van a una relacional porque tienen
 | `src/Tienda.Api/Fotos/*.jpg` | Las seis fotos de ejemplo, fotorrealistas, generadas con Gamma, dentro de la propia web |
 | `src/Tienda.Api/Comprobaciones.cs` | Las comprobaciones de la base y del almacenamiento, y `/salud` |
 | `frontend` | La foto en cada producto y el panel «Estado de la tienda», con una fila por pieza |
-| `tests/Tienda.Api.Tests` | 33 tests: se suman el catálogo en SQLite en memoria, las comprobaciones, `/salud`, las fotos y las reglas de la base gratuita en el Bicep |
+| `tests/Tienda.Api.Tests` | 35 tests: se suman el catálogo en SQLite en memoria, las comprobaciones, `/salud`, las fotos y las reglas de la base gratuita en el Bicep |
 | `azure/main.bicep` | Servidor y base de SQL, cuenta de almacenamiento, contenedor y ciclo de vida, y las dos cadenas en la web |
 | `azure/desplegar.ps1` | Exige `$SqlPassword` en `deploy.secrets.ps1` y, al final, espera a `/salud` |
 | `azure/deploy.secrets.example.ps1` | Suma `$SqlPassword` y, opcional, `$UbicacionSql` |
