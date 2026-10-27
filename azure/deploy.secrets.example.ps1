@@ -18,7 +18,8 @@ $GrupoRecursos = "rg-tienda-pruebas"
 $Responsable = "tu.nombre@tuempresa.com"
 
 # Contrasena del administrador de SQL (modulo 3): 8 caracteres o mas, con
-# mayuscula, minuscula, numero y simbolo.
+# mayuscula, minuscula, numero y simbolo. El simbolo, sin & | < > ^ ( ) % ni
+# comillas: en Windows rompen la orden de az. Valen - _ . ! @ #
 $SqlPassword = "CambiaEsto-2026!"
 
 # Opcional (modulo 3). Todas las bases gratuitas de Azure SQL de una suscripcion
